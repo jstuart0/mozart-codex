@@ -1,0 +1,40 @@
+# Example Codex CLI config for running mozart-codex.
+# Copy the relevant parts into ~/.codex/config.toml (do NOT commit your live config).
+
+# ---------------------------------------------------------------------------
+# Subagent orchestration
+# ---------------------------------------------------------------------------
+# mozart conducts by spawning the specialist subagents in .codex/agents/*.toml.
+# These defaults match mozart's design: the conductor runs at the top level and
+# fans out to specialists one level deep.
+[agents]
+# Max concurrent subagent threads. mozart's reviewer fan-out (e.g. bob + librarian
+# + xander) and multi-campaign batches stay within this. Default 6 is plenty.
+max_threads = 6
+
+# Spawn depth. 1 = the top-level conductor spawns specialists; specialists do not
+# spawn further. This mirrors mozart's contract (specialists never sub-spawn).
+# Do NOT raise this for mozart — deeper recursion breaks the orchestration model.
+max_depth = 1
+
+# Per-subagent wall-clock cap for batch jobs (seconds). Tune to your longest
+# expected specialist run (a HEAVY jackson phase, a deep dexter audit).
+job_max_runtime_seconds = 1800
+
+# ---------------------------------------------------------------------------
+# Cross-model external reviewer (the auditor inversion)
+# ---------------------------------------------------------------------------
+# On Claude Code, mozart shells out to `codex exec` for an independent second-model
+# review at plan and diff stages. On Codex, that inverts: Claude is the external
+# auditor, invoked via the `claude` CLI. mozart's persona calls `claude -p "<prompt>"`
+# (non-interactive) under its "External tool execution discipline" (background run,
+# ~5-min polling, 30-min cap). Nothing to configure here beyond having the `claude`
+# CLI installed and authenticated on PATH; this comment documents the dependency.
+
+# ---------------------------------------------------------------------------
+# Agent registration
+# ---------------------------------------------------------------------------
+# Project-scoped agents in ./.codex/agents/*.toml are picked up automatically when
+# you run Codex from this repo. To install globally, copy them to ~/.codex/agents/.
+# Each agent's own model / model_reasoning_effort / sandbox_mode is set in its TOML
+# and overrides the session defaults.

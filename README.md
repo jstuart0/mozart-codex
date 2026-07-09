@@ -14,11 +14,12 @@ of the mozart orchestration system (originally built as a Claude Code plugin).
 
 ## What it does
 
-Mozart orchestrates work across three shapes:
+Mozart orchestrates work across four shapes:
 
 - **DELIVER** — build a feature: research → plan → review → implement → validate → ship → document
 - **AUDIT** — review against a goal: discover → fan-out → synthesize → optionally remediate
 - **DIAGNOSE** — investigate a failure: intake → investigate → present findings → optionally remediate → optionally publish post-mortem
+- **EVAL** — evaluate mozart's own field performance from past campaign artifacts and improve the configuration (see the `mozart-eval` skill and `docs/EVAL.md`)
 
 At intake it **tiers** the task (TINY / STANDARD / HEAVY) to right-size the gates,
 classifies the project (GREENFIELD / BROWNFIELD), and recognizes when a request

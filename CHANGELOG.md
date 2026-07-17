@@ -4,6 +4,32 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Added (parity sync with mozart-orchestration, 2026-07-16 coding-practice gap closures)
+- **Toolchain baseline check** — new intake pre-flight gate 3: GREENFIELD
+  campaigns (or any repo missing lint/format/type-check/test/CI) must open with
+  a toolchain-bootstrap phase before feature phases; BROWNFIELD gets a surfaced
+  triage decision. Per-phase gate fails when a diff touches a language with no
+  configured mechanical check on GREENFIELD. Harry gains the matching
+  toolchain-before-features sequencing rule + self-review item.
+- **Mechanical secret scan at the per-phase gate** — gitleaks/trufflehog when
+  installed, high-signal grep fallback otherwise; any hit is a gate failure,
+  never "commit now, scrub later." Reviewer eyeballs demoted to backstop.
+- **Xander: dependency vetting checklist** (provenance/typosquat, maintenance,
+  advisories on the resolved version, license, transitive footprint + install
+  scripts, pinning + lockfile-in-same-diff; scaled by change size) and a
+  **CI/CD pipelines** checklist item (unpinned actions, over-broad workflow
+  token permissions, `${{ }}` injection, `pull_request_target` + PR-head
+  checkout, fork-PR secrets, cache poisoning). Manifest/lockfile and workflow
+  diffs added as stage-4 and stage-8 xander triggers in the conductor and
+  PIPELINE.md.
+- **Jackson: Observability and Error handling sections** — structured logs with
+  level discipline, correlation-ID propagation, no secrets/PII in logs,
+  health+metrics on new long-running services; one error idiom per codebase,
+  wrap-with-context, structured domain errors vs loud unexpected failures,
+  log-once-where-handled, user-facing messages say what to do next.
+- **Otto: observability wiring** in operational hygiene — new services ship
+  with the documented monitoring stack and at least one down/crash-loop alert.
+
 ### Added (parity sync with mozart-orchestration through 2026-07-09, `8972513`)
 - **EVAL** — fourth work shape: mozart evaluates its own field performance from
   campaign artifacts. New `mozart-eval` skill, `docs/EVAL.md` (ledger schema +

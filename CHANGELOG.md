@@ -4,6 +4,32 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Added (parity sync with mozart-orchestration, 2026-07-18: percy + findings ledger)
+- **percy** (`.codex/agents/percy.toml`, gpt-5.4, workspace-write) — senior
+  performance engineer, measurement-first: every finding carries a measurement
+  he took (EXPLAIN, endpoint timing, bundle-size diff, profile) or a cited
+  complexity argument tied to a named hot path; "could be slow" is not a
+  finding, premature optimization is an explicit anti-pattern. Reviews the
+  plan's performance *budgets* at stage 4 (p95 / query count / payload /
+  bundle size on hot paths); measures slices at stage 8; leads
+  performance/scaling AUDITs (bob + dexter demoted to support). Conditional
+  triggers wired in the conductor and PIPELINE.md; k8s sizing stays with otto.
+- **Findings ledger + escapes** (conductor state-file format) — one row per
+  dispositioned Critical/High/Medium finding (stage, lens, severity,
+  fixed/rejected/accepted-risk); rejected rows are kept as false-positive
+  data. `## Escapes` block records `Traces-to:` links when a later DIAGNOSE
+  or audit finds a defect the campaign shipped; dick's investigation template
+  records the same link from the discovering side.
+- **`scripts/mozart-metrics.sh`** — aggregates ledgers + escapes across all
+  state-file layouts into the pipeline-economics table: catches by
+  stage/lens/severity, false-positive rate per lens, escapes,
+  defect-removal efficiency, catches-per-campaign by tier. Wired into EVAL
+  stage 2; `docs/EVAL.md` gains the Pipeline economics section with
+  gate-tuning decision rules and lower-bound / anti-Goodhart caveats.
+- **Drift fixes**: PIPELINE.md roster carried the source repo's opus/sonnet
+  model labels (now matches the actual TOML models) and predated tessa
+  (rows added to roster + trigger tables).
+
 ### Added (parity sync with mozart-orchestration, 2026-07-16 coding-practice gap closures)
 - **Toolchain baseline check** — new intake pre-flight gate 3: GREENFIELD
   campaigns (or any repo missing lint/format/type-check/test/CI) must open with

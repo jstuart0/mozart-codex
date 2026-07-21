@@ -4,6 +4,35 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Added (parity sync with mozart-orchestration, 2026-07-21: OPERATE shape + hank)
+- **OPERATE** — fifth work shape: change or debug a **live system** directly
+  (installs, config changes, infra mutations, hands-on debugging of running
+  k8s / hosts / storage / DBs). The artifact is a state change to running
+  infrastructure, not a git diff; verification is empirical (curl, logs,
+  `get`), not CI; rollback is a recorded command against a snapshot, not
+  `git revert` — which is why it's a distinct shape, not a DELIVER tier. New
+  OPERATE pipeline section in the conductor (intake+pin → recon → change plan
+  → pre-flight → apply → verify → record), OPERATE tiers/modes, the
+  DELIVER-vs-OPERATE boundary test, DIAGNOSE/AUDIT → OPERATE routing, the
+  `OPERATE-PLAN-ONLY` partial flow, the `OPERATE-FULL`/`OPERATE-PLAN-ONLY`
+  state-file `Flow` values, and the `## Change ledger (OPERATE only)` state
+  block (crash-safety spine: snapshot path + rollback command recorded before
+  the apply). Wired into PIPELINE.md and README.md.
+- **hank** (`.codex/agents/hank.toml`, gpt-5.4, workspace-write) — senior
+  operations engineer, the hands-on counterpart to otto: the only agent that
+  mutates live state. Executes changes against live infrastructure under a
+  fixed loop — verify context → server-side dry-run → snapshot → apply one
+  step at a time → verify observed (never expected) → record rollback. Runs
+  OPERATE stages 4–6 and as a passthrough for one-off "just apply this" /
+  "install X" / "restart the pod" requests.
+- **otto promoted to OPERATE change-plan author** — in DELIVER he reviews
+  infra-as-code; in OPERATE (stages 2–3) he authors the change plan (exact
+  commands, per-step dry-run, snapshot step, rollback procedure, blast
+  radius), and on HEAVY verifies the server-side dry-run + immutable fields at
+  the pre-flight gate. hank executes what otto plans; he never designs the
+  change himself. Passthrough routing gains hank rows; the conducted roster
+  gains hank.
+
 ### Added (parity sync with mozart-orchestration, 2026-07-18: percy + findings ledger)
 - **percy** (`.codex/agents/percy.toml`, gpt-5.4, workspace-write) — senior
   performance engineer, measurement-first: every finding carries a measurement

@@ -14,11 +14,12 @@ of the mozart orchestration system (originally built as a Claude Code plugin).
 
 ## What it does
 
-Mozart orchestrates work across four shapes:
+Mozart orchestrates work across five shapes:
 
 - **DELIVER** — build a feature: research → plan → review → implement → validate → ship → document
 - **AUDIT** — review against a goal: discover → fan-out → synthesize → optionally remediate
 - **DIAGNOSE** — investigate a failure: intake → investigate → present findings → optionally remediate → optionally publish post-mortem
+- **OPERATE** — change or debug a live system: intake+context pin → recon → change plan → pre-flight (dry-run+snapshot) → apply → verify observed → record rollback. Installs, config changes, and infra mutations applied straight to the running cluster/host rather than through a git pipeline; verified empirically, reversed by a recorded rollback (not `git revert`)
 - **EVAL** — evaluate mozart's own field performance from past campaign artifacts and improve the configuration (see the `mozart-eval` skill and `docs/EVAL.md`)
 
 At intake it **tiers** the task (TINY / STANDARD / HEAVY) to right-size the gates,
@@ -36,7 +37,8 @@ full pipeline.
 | bob | Plan review (architecture) |
 | dexter | Code-health audit |
 | xander | Security audit |
-| otto | Infra / Kubernetes review |
+| otto | Infra / Kubernetes review (+ OPERATE change-plan author) |
+| hank | Ops executor — applies changes to live infrastructure (OPERATE) |
 | ruby | UI/UX design + frontend |
 | ian | Change-impact / blast-radius |
 | librarian | "Does this already exist?" prior-code check |

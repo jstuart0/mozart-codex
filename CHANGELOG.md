@@ -4,6 +4,40 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Added (parity sync with mozart-orchestration, 2026-07-22: INCIDENT shape)
+- **INCIDENT** — sixth work shape: respond to a **live outage** (service down or
+  badly degraded *right now*). The time-critical form of DIAGNOSE — it
+  **inverts** DIAGNOSE's "don't fix in the same pass" rule: mitigate first to
+  restore service, race hypotheses in parallel, then durable-fix. Zero new
+  agents — mozart is the incident commander (IC); responders (dick, hank, otto,
+  xander, percy, scott) are all reused. New `## INCIDENT pipeline` section in the
+  conductor: 7 stages (declare+triage → stabilize ‖ race hypotheses → converge →
+  durable fix → verify recovery → blameless post-mortem), **SEV1/2/3** tiers (the
+  INCIDENT tier axis, replacing TINY/STANDARD/HEAVY), and the parallelism
+  discipline — read-only investigation fans out into hypothesis lanes, live
+  mutation serializes through the one hand (hank).
+- **Speed vs. rigor is *sequenced*, not chosen** — the reason it's a distinct
+  shape. Mitigation runs gates-relaxed and logged `accepted-risk (incident)`
+  with a rollback command; the durable fix runs full gates (DELIVER/OPERATE,
+  repro-test-first, claude/ian/xander) once service is back.
+- New state-file blocks: the `## Timeline (INCIDENT only)` append-only spine (the
+  incident source of truth — survives crashes like the change ledger), the
+  change-ledger heading widened to `## Change ledger (OPERATE + INCIDENT
+  mitigations)`, the `INCIDENT-FULL` / `MITIGATE-ONLY` `Flow` values, and the
+  `MITIGATE-ONLY` partial flow ("just get it back up" — stops after stage 3 + 5,
+  durable fix deferred). Observability gate at declare-time: if the repo's
+  `AGENTS.md` documents no monitoring/SLO stack, mozart surfaces that recovery
+  can't be measured objectively and recommends an observability follow-up.
+- **Persona touch-ups**: dick gains an INCIDENT hypothesis-lane mode (time-boxed,
+  single parallel lane, report-to-timeline, don't block restore on perfect root
+  cause); hank gains the *one* sanctioned exception to "never mutate without a
+  snapshot" (restore-service can outrank snapshot under a declared incident — but
+  rollback-command, context-verify, serialize, and verify-before-stacking still
+  hold); scott owns the blameless post-mortem (action items, not attribution).
+  Wired into PIPELINE.md (INCIDENT pipeline section, passthrough +INCIDENT,
+  partial-flow +MITIGATE-ONLY, incident-timeline output path) and README.md (six
+  shapes + INCIDENT). Agent count stays 16 (no new agent).
+
 ### Added (parity sync with mozart-orchestration, 2026-07-21: OPERATE shape + hank)
 - **OPERATE** — fifth work shape: change or debug a **live system** directly
   (installs, config changes, infra mutations, hands-on debugging of running

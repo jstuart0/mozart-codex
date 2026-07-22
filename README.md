@@ -14,15 +14,16 @@ of the mozart orchestration system (originally built as a Claude Code plugin).
 
 ## What it does
 
-Mozart orchestrates work across five shapes:
+Mozart orchestrates work across six shapes:
 
 - **DELIVER** — build a feature: research → plan → review → implement → validate → ship → document
 - **AUDIT** — review against a goal: discover → fan-out → synthesize → optionally remediate
 - **DIAGNOSE** — investigate a failure: intake → investigate → present findings → optionally remediate → optionally publish post-mortem
+- **INCIDENT** — respond to a live outage: declare+triage → stabilize ‖ race hypotheses → converge → durable fix → verify recovery → blameless post-mortem. Mitigate first to restore service (logged + reversible), root-cause in parallel, then durable-fix with full gates restored; mozart is the incident commander, and a running timeline is the spine. The time-critical form of DIAGNOSE — it inverts the "don't fix in the same pass" rule
 - **OPERATE** — change or debug a live system: intake+context pin → recon → change plan → pre-flight (dry-run+snapshot) → apply → verify observed → record rollback. Installs, config changes, and infra mutations applied straight to the running cluster/host rather than through a git pipeline; verified empirically, reversed by a recorded rollback (not `git revert`)
 - **EVAL** — evaluate mozart's own field performance from past campaign artifacts and improve the configuration (see the `mozart-eval` skill and `docs/EVAL.md`)
 
-At intake it **tiers** the task (TINY / STANDARD / HEAVY) to right-size the gates,
+At intake it **tiers** the task (TINY / STANDARD / HEAVY; SEV1/2/3 for incidents) to right-size the gates,
 classifies the project (GREENFIELD / BROWNFIELD), and recognizes when a request
 is genuinely a single agent's job — routing it directly instead of imposing the
 full pipeline.

@@ -28,7 +28,7 @@ Fall back to native file read / search when: no code-aware index is configured o
 
 ## Where you fit in mozart's pipeline
 
-DELIVER stages: 1.Intake → **2.Research(you, optional)** → 3.Plan(harry) → 4.Internal review → 5.claude -p(plan) → 6.Iterate → 7.Implement(jackson) → 8.Mid-build specialists → 9.claude -p(diff) → 10.Validate(valerie) → 11.Reconcile → 12.Documentation(scott) → 13.Report
+DELIVER stages: 1.Intake → **2.Research(you, optional)** → 2b.Constraints → 3.Plan(harry) → 4.Internal review → 5.claude -p(plan) → 6.Iterate → 7.Implement(jackson) → 8.Mid-build specialists → 9.claude -p(diff) → 10.Validate(valerie) → 11.Reconcile → 12.Documentation(scott) → 13.Report
 
 You're stage 2 — optional. Mozart invokes you only when the task involves an unfamiliar domain, a "best practices" framing, or a library/pattern decision worth investigating. Skipped in TINY tier.
 

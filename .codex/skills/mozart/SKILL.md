@@ -76,7 +76,7 @@ You have two ways to talk to a specialist:
 
 **Default for iteration loops: send the follow-up to the existing thread (context intact), not a fresh spawn.** Re-spawning harry/jackson/valerie from scratch for a revision round throws away the exact context that makes the revision cheap and coherent — harry re-derives the plan rationale, jackson re-reads the whole diff, valerie re-scans files she already verified. Continuing the live agent keeps that state and is faster, cheaper, and less error-prone. Reserve a fresh spawn for iteration only when you *want* the agent to forget the prior round (a deliberately unanchored look — rare) or when the agent from that round is no longer reachable (e.g., you're resuming in a new session — see below).
 
-**Carve-out — a lens invoked via a stage-3 consult.** A lens invoked via a stage-3 consult (see `## Consult requested` handling, stage 3) returns a constraint card, not a plan review — narrow, bounded, no artifact to review. When that same lens is invoked again at stage 4 to review the drafted plan, that is a **fresh spawn, never** a follow-up to its consult thread — the default above does not apply here. The card and the stage-4 review are different work on different artifacts (a bound, then a judgment on a concrete plan), and continuing the live agent would anchor the stage-4 review on its own prior conclusion — the measured anchoring effect (arXiv 2603.12123; arXiv 2608.25869) that a fresh, unanchored spawn avoids.
+**Carve-out — a lens that supplied a constraint card.** A lens invoked at stage 2b or via a stage-3 consult (see `## Consult requested` handling, stage 3) returns a constraint card, not a plan review — narrow, bounded, no artifact to review. When that same lens is invoked again at stage 4 to review the drafted plan, that is a **fresh spawn, never** a follow-up to that thread — the default above does not apply here. The card and the stage-4 review are different work on different artifacts (a bound, then a judgment on a concrete plan), and continuing the live agent would anchor the stage-4 review on its own prior conclusion — the measured anchoring effect (arXiv 2603.12123; arXiv 2608.25869) that a fresh, unanchored spawn avoids. Binds identically when a remediation entry (DIAGNOSE/AUDIT → DELIVER) runs 2b before stage 3.
 
 **Resume caveat.** Live-agent continuity does not survive across mozart sessions. Live threads don't survive a new session. If you resume a campaign from a state file in a fresh top-level session, the agents from the previous session are gone — there's no existing thread to route a follow-up to. In that case, re-spawn fresh and re-brief the new agent from the artifacts (plan file, claude review, punch-list, state-file notes). The artifacts are the durable handoff; live agent context is the within-session optimization.
 
@@ -400,9 +400,9 @@ You can run the full DELIVER pipeline OR stop at a checkpoint when the user only
 
 | Flow | Trigger phrases | Runs through | Skips |
 |---|---|---|---|
-| **FULL** | (default) | All 12 stages | — |
-| **PLAN-ONLY** | "just plan it," "plan only," "stop at the plan," "give me a bulletproof plan," "I just want a plan" | Stages 1–6 | Implementation, validation, commits |
-| **RESEARCH-ONLY** | "just research," "research X," "find out what we should use" | Stages 1–2 | Plan and everything after |
+| **FULL** | (default) | All 13 stages (14 with 2b) | — |
+| **PLAN-ONLY** | "just plan it," "plan only," "stop at the plan," "give me a bulletproof plan," "I just want a plan" | Stages 1–6, including 2b when triggered | Implementation, validation, commits |
+| **RESEARCH-ONLY** | "just research," "research X," "find out what we should use" | Stages 1–2 | Plan and everything after — 2b never runs, since it only feeds a plan this flow doesn't produce |
 | **AUDIT-ONLY** | "audit X," "review X for issues" + user picks "report only" at the AUDIT decision point | AUDIT stages 1–5 | Remediation pipeline |
 | **INVESTIGATE-ONLY** | "investigate X," "diagnose Y," "why is Z broken" + user picks "report only" at the DIAGNOSE decision point | DIAGNOSE stages 1–3 | Remediation pipeline |
 | **OPERATE-PLAN-ONLY** | "plan the change but don't apply it," "give me the change plan + rollback" | OPERATE stages 1–3 (change plan) | Pre-flight, apply, verify, record |
@@ -451,6 +451,8 @@ You can enter the pipeline at a stage other than stage 1 when the user already h
 | "iterate on this plan with these findings" | **Stage 6 (Iterate)** | Plan + findings document(s) |
 | "validate this branch against the plan" / "audit my diff" | **Stage 10 (Validate)** — VALIDATE-ONLY | Plan path + diff scope |
 | "resume `<slug>`" / "pick up where we left off on `<slug>`" | **Where the plan's phase checkboxes left off** | Slug or plan path |
+
+**2b has no entry point of its own** — it's evaluated automatically at intake against the task statement (see `### 2b. Constraints`, above), never invoked by a standalone user request.
 
 ### Implementing an existing plan (most common)
 
@@ -622,6 +624,7 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 ## Stage progress
 - [x] 1. Intake — <timestamp>
 - [x] 2. Research — <timestamp> — <agents that ran, or "skipped">
+- [-] 2b. Constraints — skipped: no trigger
 - [x] 3. Plan — <timestamp>
 - [x] 4. Internal review — <timestamp> — <reviewers invoked>
 - [x] 5. Claude on plan — <timestamp>
@@ -824,7 +827,7 @@ Shape this section with:
 
 Example (DELIVER / STANDARD / BROWNFIELD, FULL flow):
 
-> **Rationale**: STANDARD-tier feature delivery in a brownfield repo. Sarah research warranted (new dependency choice). Bob always reviews; librarian runs because new utilities are likely; xander not anticipated (no auth/secrets surface); otto not anticipated (no infra). Claude on plan and on diff per STANDARD. Valerie FULL, scott documents.
+> **Rationale**: STANDARD-tier feature delivery in a brownfield repo. Sarah research warranted (new dependency choice). **2b**: not triggered — no who-may-do-what question and no published guarantee in this repo. Recorded as `[-] 2b. Constraints — skipped: no trigger`. Bob always reviews; librarian runs because new utilities are likely; xander not anticipated (no auth/secrets surface); otto not anticipated (no infra). Claude on plan and on diff per STANDARD. Valerie FULL, scott documents.
 
 ```mermaid
 flowchart TD
@@ -918,6 +921,7 @@ Chronological. Each entry: timestamp, stage, agent(s) invoked, brief outcome. Ap
 
 - **<HH:MM:SS>** — Stage 1 (Intake): mozart classified DELIVER / STANDARD / BROWNFIELD; ticketing project resolved from AGENTS.md
 - **<HH:MM:SS>** — Stage 2 (Research, parallel): sarah + codebase-pattern-finder → brief at `thoughts/shared/research/<slug>.md`
+- **<HH:MM:SS>** — Stage 2b (Constraints): skipped — no trigger
 - **<HH:MM:SS>** — Stage 3 (Plan): harry → plan at `thoughts/shared/plans/<slug>.md`
 - **<HH:MM:SS>** — Stage 4 (Internal review, parallel): bob (2 medium findings), librarian (verdict: NEW)
 - **<HH:MM:SS>** — Stage 5 (Claude r1): 1 high finding (sequencing concern)
@@ -1067,6 +1071,27 @@ Skip in TINY. In STANDARD/HEAVY, run when:
 
 Sarah herself parallelizes her internal tool calls (codebase scan + web search in one batch). She returns the brief inline for small jobs, or **you** persist it to `thoughts/shared/research/<slug>.md` for substantial ones — sarah runs `read-only` and cannot write it herself.
 
+### 2b. Constraints (conditional — narrow)
+
+Runs when the task statement itself trips one of two conditions, evaluated **once, at intake** — never re-derived mid-plan:
+
+1. The task changes **who may do what** — an authorization rule, trust boundary, privilege level, credential path, or the identity an action runs as → **xander**.
+2. The task changes behavior covered by a guarantee **already published in this repo** — README / PRIVACY / SECURITY / API docs / CHANGELOG — that the change could falsify → **ian**.
+
+**This is a deliberate narrowing of xander's stage-4 trigger (`### 4. Internal review`, below) and stage-8 trigger (`### 8. Mid-build specialists`)** — both of those also fire on dependency bumps and CI/CD workflow edits, neither of which produces a task-derivable authorization rule. Reusing either table here would turn "no cost when untriggered" into "a cost on most campaigns." If a condition fires, spawn the named lens — xander or ian **only**, narrower than the four-lens pull route in harry's `## Consult requested` (unprompted push must stay rare) — with a **fresh spawn**: the task statement, nothing else.
+
+**Accepted limitation**: this trigger cannot see a trust boundary that emerges only from an implementation choice made later — that's stage 4's and stage 8's job, not 2b's. Stated as an acceptance, not an omission.
+
+**Returns a constraint card, not a review** — the identical bound the stage-3 consult route's card carries (see `## Consult requested` handling, stage 3, above, for the full spec: `must`/`must-not` bullets, **falsifiable** against something that exists independently of this campaign, no design recommendations, no severities, and the same send-back-once / second-over-run remedy). **2b adds one clause of its own, load-bearing for the boundary dexter's adversarial test checks**: no artifact to review. 2b never sees a plan or a diff, which is what keeps it from degrading into "stage 4, earlier" — a distinction the stage-3 route doesn't need, since a consult can reference a plan already in progress and 2b structurally cannot.
+
+Persist the card to `thoughts/shared/plans/active/<slug>.constraints.md` (append-only, `## <lens> — 2b` per card) per `## Persisting artifacts for read-only agents`, and record the path in the state file's `Paths: Constraints` line — the same artifact and mechanism a stage-3 consult uses. A lens that supplied a 2b card is invoked again at stage 4 by a **fresh spawn, never** a follow-up to its 2b thread — see *Continuing a spawned agent vs re-spawning fresh* for the carve-out and its citations.
+
+**On a remediation entry** (AUDIT → remediate, DIAGNOSE → remediate — both enter DELIVER at stage 3, skipping stage 2): evaluate the trigger against the audit or investigation findings, which are exactly the evidence that makes it evaluable. If it fires, run 2b before stage 3; if not, the entry stays at stage 3.
+
+**Skip form**: when neither condition fires, `[-] 2b. Constraints — skipped: no trigger` — never leave it bare `[ ]`.
+
+**The untriggered cost, exactly — four touches, every one an existing mandatory-template field populated with its default, none of them a new document**: one state-file `## Stage progress` row (the skip form above); one flow-sketch `## Stage trace` line (`Stage 2b (Constraints): skipped — no trigger`); one state-file `Paths: Constraints` line, reading `n/a` the same way `Investigation: n/a` already reads on a non-bug-shaped campaign; and one clause in the intake rationale, the same paragraph that already names which conditional specialists were and weren't anticipated. Nothing beyond those four: no `## Deviations from proposed` entry (the intake checklist records the trigger outcome before any agent runs, so a later "still not triggered" is what was proposed, not a divergence from it), no diagram node in either the Proposed or Actual flow (an unanticipated, untriggered stage was never drawn), no `## Findings ledger` row (nothing was raised), no `thoughts/shared/plans/active/<slug>.constraints.md` file (no card to persist), no ticket transition.
+
 ### 3. Plan (harry)
 - Brief harry: task, research brief (if any), plan path, context
 - Harry reads code, drafts the plan (template includes `Documentation to update` and `Pattern parity / wiring sites`)
@@ -1093,7 +1118,7 @@ Pre-filter reviewers based on what the plan actually touches. Don't invoke a len
 
 Invoke applicable reviewers in **a single parallel fan-out** (up to `max_threads`). Brief each with the plan path and the original task. Severities: Critical / High / Medium / Low.
 
-**Carve-out**: a lens that answered a stage-3 consult on this plan is invoked here with a **fresh spawn, never** a follow-up to its consult thread — see *Continuing a spawned agent vs re-spawning fresh*, above.
+**Carve-out**: a lens that supplied a constraint card on this plan — at stage 2b or via a stage-3 consult — is invoked here with a **fresh spawn, never** a follow-up to that thread — see *Continuing a spawned agent vs re-spawning fresh*, above.
 
 **Every reviewer brief includes the wiring-sites check**: if the plan introduces or extends a pattern in your lens's domain, verify that harry's `Pattern parity / wiring sites` section is exhaustive — re-run the documented grep, name any site that's missing from the list, and treat omission as at least High severity. Each lens owns this check inside its discipline: xander for security patterns (auth gates, transport wrappers, CSP/CSRF, error envelopes), otto for infra patterns (cross-deployment-method parity, NetworkPolicy shape, securityContext), ruby for UI patterns (ARIA attribute sets, design-system tokens), dexter for code-health patterns (helper extractions, shared utilities), tessa for test patterns (fixture shapes, assertion contracts), bob for architectural patterns (interface shape, layering rules).
 
@@ -2099,6 +2124,7 @@ Use these short labels — consistent across runs so watchers learn the vocabula
 |---|---|
 | 1 | `Intake` |
 | 2 | `Research` |
+| 2b | `Constraints` |
 | 3 | `Plan` |
 | 4 | `Plan review` |
 | 5 | `Claude r1` |

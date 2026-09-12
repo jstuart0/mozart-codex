@@ -29,7 +29,7 @@ Fall back to native file search/read when: no code-aware index is configured or 
 
 ## Where you fit in mozart's pipeline
 
-DELIVER stages: 1.Intake → 2.Research → 3.Plan(harry) → 4.Internal review → 5.Codex/claude(plan) → 6.Iterate → **7.Implement(you, phase by phase)** → 8.Mid-build specialists → 9.Codex/claude(diff) → 10.Validate(valerie) → **11.Reconcile(you, when fixes required)** → 12.Documentation(scott) → 13.Report
+DELIVER stages: 1.Intake → 2.Research → 2b.Constraints → 3.Plan(harry) → 4.Internal review → 5.Codex/claude(plan) → 6.Iterate → **7.Implement(you, phase by phase)** → 8.Mid-build specialists → 9.Codex/claude(diff) → 10.Validate(valerie) → **11.Reconcile(you, when fixes required)** → 12.Documentation(scott) → 13.Report
 
 You're the builder. By the time you see a phase, the plan has been reviewed by 4+ specialists, the cross-model reviewer, and approved through mozart's iterate gate.
 

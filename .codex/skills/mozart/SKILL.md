@@ -76,6 +76,8 @@ You have two ways to talk to a specialist:
 
 **Default for iteration loops: send the follow-up to the existing thread (context intact), not a fresh spawn.** Re-spawning harry/jackson/valerie from scratch for a revision round throws away the exact context that makes the revision cheap and coherent — harry re-derives the plan rationale, jackson re-reads the whole diff, valerie re-scans files she already verified. Continuing the live agent keeps that state and is faster, cheaper, and less error-prone. Reserve a fresh spawn for iteration only when you *want* the agent to forget the prior round (a deliberately unanchored look — rare) or when the agent from that round is no longer reachable (e.g., you're resuming in a new session — see below).
 
+**Carve-out — a lens invoked via a stage-3 consult.** A lens invoked via a stage-3 consult (see `## Consult requested` handling, stage 3) returns a constraint card, not a plan review — narrow, bounded, no artifact to review. When that same lens is invoked again at stage 4 to review the drafted plan, that is a **fresh spawn, never** a follow-up to its consult thread — the default above does not apply here. The card and the stage-4 review are different work on different artifacts (a bound, then a judgment on a concrete plan), and continuing the live agent would anchor the stage-4 review on its own prior conclusion — the measured anchoring effect (arXiv 2603.12123; arXiv 2608.25869) that a fresh, unanchored spawn avoids.
+
 **Resume caveat.** Live-agent continuity does not survive across mozart sessions. Live threads don't survive a new session. If you resume a campaign from a state file in a fresh top-level session, the agents from the previous session are gone — there's no existing thread to route a follow-up to. In that case, re-spawn fresh and re-brief the new agent from the artifacts (plan file, claude review, punch-list, state-file notes). The artifacts are the durable handoff; live agent context is the within-session optimization.
 
 **Narration.** A continuation is still a stage action — narrate it. Use the same `TASK [...]` cadence but make the verb explicit: `TASK [<slug>: iterate r1] Sending harry 3 reviewer findings as a follow-up to his existing thread (continuing — context intact)...`.
@@ -603,9 +605,10 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 **Current stage**: <number and name, e.g., "7. Implement (phase 3 of 5)">
 
 ## Paths
-- Plan: thoughts/shared/plans/<slug>.md
+- Plan: thoughts/shared/plans/active/<slug>.md
 - Investigation: thoughts/shared/investigations/<slug>.md (or n/a if not bug-shaped)
 - Research brief: <path or n/a>
+- Constraints: <path or n/a>
 - Claude r1 (plan): <path or "not yet run">
 - Claude r2 (diff): <path or "not yet run">
 - Worktree: <path + branch while the campaign runs, or n/a — merge disposition recorded at closeout>
@@ -641,6 +644,7 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 - Plan iteration round: <N> / 3
 - Per-phase attempts (current phase): <N> / 3
 - Reconciliation round: <N> / 3
+- Consult count: <N> / 2
 
 ## Findings ledger
 | id | stage | lens | severity | disposition | note |
@@ -1067,7 +1071,10 @@ Sarah herself parallelizes her internal tool calls (codebase scan + web search i
 - Brief harry: task, research brief (if any), plan path, context
 - Harry reads code, drafts the plan (template includes `Documentation to update` and `Pattern parity / wiring sites`)
 - **Wiring-sites discipline**: when the plan introduces or extends a pattern (transport wrapper, auth/role gate, structured-error envelope, ARIA attribute set, healthcheck argument, NetworkPolicy shape, securityContext stanza, parity field across Helm/kustomize/compose, etc.), harry must enumerate every existing site that needs the pattern — not just the site being changed. The grep that produced the list is documented in the plan so downstream reviewers and jackson can re-run it. This is the lens that distinguishes "this diff is correct" from "this pattern is consistent across the codebase." Per-commit reviewers see the diff; only the wiring-sites enumeration in the plan makes the population visible to them. See [Consistency lens](#consistency-lens-wiring-sites) below for the rationale.
-- If harry returns **open questions**, surface them to the user before continuing
+- **A consult request is not an open question.** If harry returns a `## Consult requested` block, don't surface it to the user before continuing — handle it directly. All three of his fields are load-bearing: **Lens** and **Question** drive the spawn below the cap; **If declined** is what he drafts against the moment mozart can't or won't return a card
+  - **Below the cap (`Consult count` < 2)**: spawn the named lens (xander, ian, librarian, or otto) with a **fresh spawn**, briefed with the question and the task only (never the draft plan — none exists yet), and receive a **constraint card**: ≤5 bullets, each ≤2 lines, each a `must`/`must-not` rule citing `file:line` or a named external standard, each falsifiable against something that exists independently of this campaign (a published guarantee, an existing trust boundary, an external standard, a live manifest field) — no design recommendations, no severities. A return breaking either bound is sent back once with the bound restated; on a second over-run, pass only the first 5 conforming bullets and record the over-run in the findings ledger. Persist the card to `thoughts/shared/plans/active/<slug>.constraints.md` (append-only, `## <lens> — consult r<N>` per card) per `## Persisting artifacts for read-only agents`, and record the path in the state file's `Paths: Constraints` line. **Increment `Consult count` in `## Iteration counters` in the same step that launches the consult** — the same discipline stage 6's iteration cap uses for its own round counter, below; a counter you plan to update later is how a written cap gets silently exceeded. Then message harry with the card so he resumes drafting. Record the exchange as a **stage-3 event** in the flow-sketch trace — not a new stage
+  - **Cap: 2 consults per campaign.** At the cap, don't spawn a third — **both** surface to the user that a consult was skipped at the cap **and** message harry telling him to resume drafting against his own stated **If declined** fallback. A consult must never actually stall him; his fallback is what makes that true, not just what his return format promises
+- If harry returns **open questions** (a distinct return shape from a consult request), surface them to the user before continuing
 
 ### 4. Internal review (conditional, parallel)
 
@@ -1085,6 +1092,8 @@ Pre-filter reviewers based on what the plan actually touches. Don't invoke a len
 | **percy** | | Plan touches DB schema or query shapes, caching layers, pagination/streaming of unbounded collections, hot-path endpoints, or bundle-affecting frontend changes — or states an explicit performance goal. At stage 4 he reviews the plan's **performance contract**: hot user-facing/high-volume paths should state a budget (p95 latency, query count per request, payload/bundle size). Skip on doc-only, manifest-only, cold-path, and internal-tooling plans |
 
 Invoke applicable reviewers in **a single parallel fan-out** (up to `max_threads`). Brief each with the plan path and the original task. Severities: Critical / High / Medium / Low.
+
+**Carve-out**: a lens that answered a stage-3 consult on this plan is invoked here with a **fresh spawn, never** a follow-up to its consult thread — see *Continuing a spawned agent vs re-spawning fresh*, above.
 
 **Every reviewer brief includes the wiring-sites check**: if the plan introduces or extends a pattern in your lens's domain, verify that harry's `Pattern parity / wiring sites` section is exhaustive — re-run the documented grep, name any site that's missing from the list, and treat omission as at least High severity. Each lens owns this check inside its discipline: xander for security patterns (auth gates, transport wrappers, CSP/CSRF, error envelopes), otto for infra patterns (cross-deployment-method parity, NetworkPolicy shape, securityContext), ruby for UI patterns (ARIA attribute sets, design-system tokens), dexter for code-health patterns (helper extractions, shared utilities), tessa for test patterns (fixture shapes, assertion contracts), bob for architectural patterns (interface shape, layering rules).
 

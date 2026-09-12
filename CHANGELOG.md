@@ -4,6 +4,74 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Fixed (2026-09-12: capability-vs-claim parity)
+- **Personas no longer promise an action their `sandbox_mode` can't perform.** Repaired 14
+  instances of one defect class across three shapes, prose-only — **no `sandbox_mode` value
+  changed anywhere**; the capability model stays byte-identical, **12 `read-only` / 8
+  `workspace-write`**, at base and head.
+- **Task-class**: harry and jackson stop claiming they spawn sub-agents. `agents.max_depth = 1`
+  means a subagent (which is what harry and jackson run as) can't spawn one of its own — harry's
+  Design It Twice now drafts multiple radically-different interface proposals himself, in one
+  pass, and jackson's mid-build specialist routing gets the matching repair.
+- **Field-note class (8 instances)**: `dexter`, `dick`, `ian`, `librarian`, `otto`, `sarah`,
+  `valerie`, `xander` — all `read-only` — stop claiming they self-append to `LEARNINGS.md` via a
+  `Bash` heredoc. `read-only` blocks every filesystem write, heredoc included. `LEARNINGS.md`'s
+  append protocol is rewritten: the 12-name `read-only` population is spelled out explicitly (was
+  a stale 3-name list), and each of the 8 personas now returns its proposed entry to mozart, who
+  appends on its behalf.
+- **Write-class artifacts (3 instances)**: dick's findings doc, sarah's brief, and otto's OPERATE
+  change plan are returned to mozart rather than written by the `read-only` persona claiming (or
+  implying) authorship. New `## Persisting artifacts for read-only agents` section in the mozart
+  skill grants and bounds mozart's authorship (verbatim — no condensing, no editorializing);
+  mozart's own editable-file allowlist amended to match. Six stale tool-noun references
+  (`**Bash**` → `**shell**`, `**WebFetch**` → `**web fetch**`) fixed on dick and tessa. xander's
+  unhedged "check advisories" imperative is reordered, not weakened — web fetch leads, and the
+  four scanners (`npm audit`, `pip-audit`, `govulncheck`, `cargo audit`) stay in the same clause,
+  now gated behind it rather than claimed unconditionally under a `read-only` persona.
+- **Two of this campaign's own verification checks corrected mid-flight**: the persist-clause
+  regex was widened from matching one accidental emphasis form to verifying the underlying
+  property regardless of bold/italic/plain; the constraint-card producer registry was corrected
+  to name all four eligible producers (`xander`/`ian` via stage `2b`; `xander`/`ian`/`librarian`/
+  `otto` via a stage-3 consult) instead of the two `2b` alone can trigger.
+- Ticket: [#1](https://github.com/jstuart0/mozart-codex/issues/1). Plan:
+  `.mozart/plans/active/2026-09-12-deliver-capability-claim-parity.md`. Commits: `6a32d74`,
+  `8f19be4`, `6363bcf`, `dd65e4e`, `9e8244c`.
+
+**What this doesn't establish.** The premise — that `read-only` actually blocks a write — was
+verified empirically, but the result is narrower than it looks: a depth-0 `read-only` session was
+denied with *"patch rejected: writing is blocked by read-only sandbox; rejected by user approval
+settings,"* a **conjunctive** denial, and the probe ran under `approval: never`. The demonstrated
+claim is *"read-only + never-approve denies,"* not *"read-only denies"* on its own. The artifact
+enumeration behind this repair is closed only over path-shaped references in this repo's
+`.md`/`.toml`/`.sh`/`.example` text — file-terminated paths and bare directory references on
+write-verb lines — and does not cover an artifact named only in prose with no path token, a path
+computed at runtime, or file types outside that list. Whether `~/.mozart/evals/` — which lies
+outside any workspace root — is writable is left open; it's a session-sandbox question
+`config.toml.example` doesn't answer, and resolving it was out of scope for a prose-only campaign.
+This port still has no contract-gate suite and no CI; every check above was run by hand, and
+nothing mechanically prevents regression.
+
+### Added (parity sync with mozart-orchestration, 2026-09-11: pre-plan specialist consults + stage `2b`)
+- **Stage `2b` (Constraints)** — a narrow, bounded constraint pushed automatically before harry
+  drafts the plan, when the task itself trips one of two triggers: who-may-do-what (an
+  authorization/trust-boundary question) → xander; a change that could falsify a guarantee this
+  repo already publishes → ian. Returns a ≤5-bullet `must`/`must-not` constraint card, persisted to
+  `thoughts/shared/plans/active/<slug>.constraints.md`. Off by default; an untriggered `2b` costs
+  exactly **four** touches (a state-file `## Stage progress` row, a flow-sketch `## Stage trace`
+  line, a state-file `Paths: Constraints` line reading `n/a`, and one clause in the intake
+  rationale) and nothing else.
+- **`## Consult requested`** — a new return type for harry: before a plan exists, he can pull in
+  one of four lenses (xander, ian, librarian, or otto) with exactly one bounded question, stating
+  what he assumes if declined. Capped at 2 consults per campaign (`Consult count` in the state
+  file); hitting the cap surfaces to the user and tells harry to draft against his own fallback
+  rather than stall.
+- **Anchoring carve-out extended**: a lens that supplied a constraint card (at `2b` or via a
+  consult) is re-invoked at stage 4 as a fresh spawn, never a continued thread — the same reviewer
+  never meets its own prior conclusion already anchored in the plan under review.
+- Ported across 10 conductor sites (`.codex/skills/mozart/SKILL.md`, `PIPELINE.md`) and 11 persona
+  `DELIVER stages:` lines. No new agent; no `sandbox_mode` change.
+- Ticket: [#1](https://github.com/jstuart0/mozart-codex/issues/1). Commits: `46576b3`, `27b1f53`.
+
 ### Added (parity sync with mozart-orchestration, 2026-07-22: INCIDENT shape)
 - **INCIDENT** — sixth work shape: respond to a **live outage** (service down or
   badly degraded *right now*). The time-critical form of DIAGNOSE — it

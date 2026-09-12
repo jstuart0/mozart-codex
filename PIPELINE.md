@@ -152,7 +152,7 @@ For investigating a specific failure (bug, regression, test failure, performance
 
 ```
 1. Intake     — mozart restates symptom, captures evidence, identifies scope; creates state file + flow sketch
-2. Investigate— dick reproduces, isolates, identifies root cause → thoughts/shared/investigations/<slug>.md
+2. Investigate— dick reproduces, isolates, identifies root cause; returns findings, mozart persists to thoughts/shared/investigations/<slug>.md
 3. Decision   — user picks: report only, or remediate
                   └─ Remediate: enter DELIVER at stage 3 (Plan) with findings as harry's brief;
                      stage 2 (Research) is typically skipped — dick's investigation covers it

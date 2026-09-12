@@ -38,13 +38,13 @@ explicit `SendMessage(harry, ...)` call. Less deterministic; same outcome.
 
 | Mozart (Claude Code) | Codex CLI | Notes |
 |---|---|---|
-| `.claude/agents/*.md` (YAML front matter + markdown body) | `.codex/agents/*.toml` (`~/.codex/agents/` personal, `.codex/agents/` project) | Body ports into `developer_instructions = """..."""`. |
+| `.claude/agents/*.md` (YAML front matter + markdown body) | `.codex/agents/*.toml` (`~/.codex/agents/` personal, `.codex/agents/` project) | Body ports into `developer_instructions = '''...'''`. |
 | `Task(subagent_type="harry")` | natural-language spawn; Codex resolves by the agent's `description` | Prompt-driven, not an explicit API call. |
 | Parallel reviewer fan-out | `agents.max_threads` (default 6) | Compatible with mozart's ~3–4 concurrency cap. |
 | Top-level-only; subagents can't spawn | `agents.max_depth` (default 1) | Exact match: mozart at depth 0 → specialists at depth 1; specialists don't spawn. |
 | `SendMessage` (continue live agent) | orchestrator "routing follow-up instructions" to an existing thread | See "Open question, resolved" above. |
 | `/mozart` slash command + skill | Codex **skill** (custom prompts are deprecated in favor of skills) | Skills support implicit + explicit invocation and ship in-repo. |
-| `tools: Read, Grep, Glob, Edit, Write, Bash` | `sandbox_mode` (`read-only` vs `workspace-write`) + `mcp_servers` | Codex has no per-tool allowlist; capability is governed by sandbox mode. |
+| `tools: Read, Grep, Glob, Edit, Write, Bash` | `sandbox_mode` (`read-only` vs `workspace-write`) + `mcp_servers` | Codex has no per-tool allowlist; capability is governed by sandbox mode. Verified empirically, not just asserted: a depth-0 `read-only` session's `apply_patch` was refused with *"patch rejected: writing is blocked by read-only sandbox; rejected by user approval settings"* — see the capability-vs-claim parity campaign (`.mozart/plans/active/2026-09-12-deliver-capability-claim-parity.md`, Phase 0a). That denial is conjunctive and was observed under `approval: never`, so the confirmed claim is narrower than "read-only always denies." |
 | `model: sonnet/opus` | `model` + `model_reasoning_effort` | See model map below. |
 | `CLAUDE.md` (repo instructions) | `AGENTS.md` | Concatenated root→cwd, nearer overrides. |
 | jcodemunch MCP (code-aware index) | `[mcp_servers.NAME]` in the agent TOML or `config.toml` | Same MCP server; declared per-agent or globally. |
@@ -55,7 +55,7 @@ explicit `SendMessage(harry, ...)` call. Less deterministic; same outcome.
 ```toml
 name = "..."                          # required — identifier
 description = "..."                   # required — when Codex should use it
-developer_instructions = """..."""    # the persona body
+developer_instructions = '''...'''    # the persona body
 model = "gpt-5.3-codex"               # optional — inherits session if omitted
 model_reasoning_effort = "high"       # optional — low | medium | high
 sandbox_mode = "workspace-write"      # read-only | workspace-write
@@ -98,10 +98,15 @@ The persona *body* ports nearly verbatim. Mechanical swaps applied per agent:
 1. `CLAUDE.md` → `AGENTS.md`.
 2. Tool nouns `Read`/`Grep`/`Glob`/`Edit`/`Write` → generic "file read / search
    / edit" (Codex's built-ins); keep the discipline, drop the Claude tool names.
+   Swept to completion by the capability-vs-claim parity campaign
+   (`.mozart/plans/active/2026-09-12-deliver-capability-claim-parity.md`): the
+   last 6 stale bold tool-noun references (`**Bash**`, `**WebFetch**`) on
+   `dick.toml` and `tessa.toml` are gone; 0 remain across all 20 personas.
 3. `ToolSearch` / "deferred tool" friction → "MCP/skill load" framing.
 4. "single parallel tool-call message" → "parallel fan-out (`max_threads`)".
 5. Tool-list front matter → `sandbox_mode` (read-only for reviewers/auditors;
-   workspace-write for jackson, harry, ruby, scott).
+   workspace-write for bob, hank, harry, jackson, percy, ruby, scott, tessa —
+   8 of 20 personas, not 4).
 6. "bundled PIPELINE.md / LEARNINGS.md / mozart persona" → same files shipped
    under `.codex/` alongside the agents.
 7. `codex exec` review references (in mozart.md) → `claude -p` review.
@@ -127,9 +132,12 @@ is harness-neutral and stays as written.
 ## Work breakdown
 
 1. **POC (this doc):** translate jackson → `.codex/agents/jackson.toml`. ✅
-2. Translate the other 13 personas (mechanical, per the rules above).
-3. Author the mozart conductor as `.codex/agents/mozart.toml` +
-   the entry-point skill.
+2. Translate the other 13 personas (mechanical, per the rules above). ✅ — shipped
+   as 20 personas at `.codex/agents/*.toml`.
+3. ~~Author the mozart conductor as `.codex/agents/mozart.toml`~~ — **stale.**
+   There is no `mozart.toml` and there will not be one: the conductor shipped as
+   a skill, `.codex/skills/mozart/SKILL.md`, not an agent. ✅ — done, differently
+   than planned here.
 4. Swap the cross-model reviewer in mozart's body: `codex exec` → `claude -p`.
 5. Add `config.toml` `[agents]` defaults (max_threads, max_depth) and document
    `~/.codex` vs project install in INTEGRATION.md.

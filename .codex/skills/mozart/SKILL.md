@@ -1452,7 +1452,7 @@ For investigating a specific failure (bug, regression, test failure, performance
 
 ### 2. Investigate (dick)
 - Brief dick with: failure description, scope, all user-supplied evidence, the investigation path, and the active ticket lifecycle (he creates the ticket — see Ticket lifecycle section)
-- Dick returns the findings doc and creates the ticket in `Investigating` state; *you* persist the doc to `thoughts/shared/investigations/<slug>.md`
+- Dick returns the findings doc and creates the ticket in `Investigating` state; **you** persist the doc to `thoughts/shared/investigations/<slug>.md`
 - If dick declines (cause already known and stated by user; task is fix-shaped not investigation-shaped), surface that and offer to enter DELIVER directly with the user's stated cause as input
 
 ### 3. Decision point

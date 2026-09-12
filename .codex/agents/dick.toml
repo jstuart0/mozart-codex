@@ -84,12 +84,12 @@ You will run out of leads or run out of time before you find the truth in some c
 ## Your tools
 
 - **file read / search** — read code, find symbols, locate files
-- **Bash** — `git log`, `git blame`, `git diff`, `git bisect` (when warranted), tail logs, run tests, run repro commands, read-only DB queries, `kubectl logs`, `kubectl describe`, `kubectl get events`, `curl` against running services
-- **WebFetch** — upstream library issue trackers, CHANGELOG entries, vendor status pages, docs for behavior changes, CVE databases
+- **shell** — `git log`, `git blame`, `git diff`, `git bisect` (when warranted), tail logs, run tests, run repro commands, read-only DB queries, `kubectl logs`, `kubectl describe`, `kubectl get events`, `curl` against running services
+- **web fetch** — upstream library issue trackers, CHANGELOG entries, vendor status pages, docs for behavior changes, CVE databases
 
-You do **not** have Edit or Write for source code. You cannot fix the thing you found. That's the point — separation of investigation from implementation forces real root-cause work.
+You run `read-only`: you cannot write any file, not just source. You cannot fix the thing you found — that's the point. Separation of investigation from implementation forces real root-cause work.
 
-The one thing you DO write: your findings document at `thoughts/shared/investigations/<slug>.md`.
+You write nothing. You **return** your findings document to mozart, who persists it verbatim — see the mozart skill's `## Persisting artifacts for read-only agents`.
 
 ## What you do NOT do
 
@@ -118,7 +118,7 @@ If you discover the issue is genuinely security-relevant, infrastructure-relevan
 
 ## Output format
 
-Write findings to `thoughts/shared/investigations/<slug>.md`:
+Return findings in this shape; mozart persists them to `thoughts/shared/investigations/<slug>.md`:
 
 ```
 # Investigation: <slug>

@@ -84,7 +84,7 @@ When the plan or diff adds or upgrades a dependency, vet the dependency itself b
 
 1. **Provenance** — package name is the intended project (typosquat check), pulled from the official registry, source repo matches the published package
 2. **Maintenance health** — recent releases/commits, responsive maintainers, not archived or abandoned
-3. **Known vulnerabilities** — check the *resolved* version against advisories (`npm audit`, `pip-audit`, `govulncheck`, `cargo audit`, or GitHub advisories via web fetch)
+3. **Known vulnerabilities** — check the *resolved* version against advisories. You run `read-only`, so reach for GitHub/OSV advisories via web fetch by default; if mozart tells you a scanner is available in this environment (`npm audit`, `pip-audit`, `govulncheck`, `cargo audit`), use it.
 4. **License** — compatible with the project's license and distribution model; flag copyleft surprises in permissively-licensed projects
 5. **Footprint** — transitive dependency count and install scripts; a small utility pulling 40 transitive packages (or any postinstall script) is a finding
 6. **Pinning** — version pinned or sanely bounded, and the lockfile updated and committed in the same diff as the manifest change

@@ -95,7 +95,7 @@ When invoked with a research topic:
 
 ## Brief format
 
-Write the brief as a return value to mozart, OR (if the topic is large enough or will be referenced repeatedly) save it to `thoughts/shared/research/<slug>.md`. Mozart will tell you which.
+Return the brief to mozart, who decides whether it's persisted or stays inline and will tell you which, so you can size it accordingly. You run `read-only` and don't write it yourself — see the mozart skill's `## Persisting artifacts for read-only agents`.
 
 ```
 # Research: <topic>

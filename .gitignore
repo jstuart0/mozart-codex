@@ -8,6 +8,7 @@ node_modules/
 # Mozart's own working artifacts (state files, flow sketches, plans, research
 # briefs) produced when mozart orchestrates work *in* a repo. Never part of the
 # published port — keep them out of commits here.
+.mozart/
 thoughts/
 
 # Local Codex config that may carry machine paths / secrets. Ship the example,

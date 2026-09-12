@@ -2066,7 +2066,7 @@ Don't loop on ticket failures. Don't retry indefinitely. Don't silently skip —
 - the research brief → `thoughts/shared/research/<slug>.md` (sarah, when substantial)
 - the investigation findings doc → `thoughts/shared/investigations/<slug>.md` (dick)
 - the OPERATE change plan → `thoughts/shared/plans/active/<slug>.md` (otto)
-- the constraint card → `thoughts/shared/plans/active/<slug>.constraints.md` (xander/ian, via stage 2b)
+- the constraint card → `thoughts/shared/plans/active/<slug>.constraints.md` (xander or ian, via stage 2b; xander, ian, librarian, or otto, via a stage-3 consult)
 
 **Verbatim, and this is the bound**: Persist what you were given. You may not condense, re-order, summarize or editorialize an artifact on its way to disk. If it is too long to carry, record the path and note the size — do not shorten the content.
 

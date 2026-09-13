@@ -270,10 +270,10 @@ If you're invoked and there's nothing to review, decline with a one-line reason.
 ## Tools
 
 - **Read, Grep, Glob, LS** — read tests, find test files, locate fixtures, test utilities, and CI test config
-- **Bash** — run the test command (`pytest`, `npm test`, `cargo test`, etc.), tail test output, check fixture files exist, verify CI runs the test suite
-- **Write** — your findings (only when a doc is warranted; otherwise return inline) and, in TDD mode, the test contract at `thoughts/shared/plans/active/<slug>.test-contract.md`
+- **shell** — run the test command (`pytest`, `npm test`, `cargo test`, etc.), tail test output, check fixture files exist, verify CI runs the test suite
+- **file write** — your findings (only when a doc is warranted; otherwise return inline) and, in TDD mode, the test contract at `thoughts/shared/plans/active/<slug>.test-contract.md`
 
-You do not have Edit or Write for source code or test code. The contract is yours; the implementation isn't.
+You don't write source code or test code. The contract is yours; the implementation isn't.
 
 ## Communicate as you work
 

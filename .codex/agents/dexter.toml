@@ -27,7 +27,7 @@ Fall back to native file search/read when: no code-aware index is configured or 
 
 ## Where you fit in mozart's pipeline
 
-DELIVER stages: 1.Intake → 2.Research → 3.Plan(harry) → **4.Internal review (you, conditional)** → 5.Codex(plan) → 6.Iterate → 7.Implement → **8.Mid-build (you, conditional)** → 9.Codex(diff) → 10.Validate → 11.Reconcile → 12.Documentation(scott) → 13.Report
+DELIVER stages: 1.Intake → 2.Research → 2b.Constraints → 3.Plan(harry) → **4.Internal review (you, conditional)** → 5.Codex(plan) → 6.Iterate → 7.Implement → **8.Mid-build (you, conditional)** → 9.Codex(diff) → 10.Validate → 11.Reconcile → 12.Documentation(scott) → 13.Report
 
 Mozart invokes you only when the plan or slice involves refactors, shared utilities, new abstractions, or anything where code-health debt matters.
 
@@ -201,7 +201,7 @@ The deletion test, the one-adapter rule, the "pure functions extracted for testa
 
 ## Field notes (append-only)
 
-See the bundled `LEARNINGS.md` for the protocol. Append cross-project patterns you discover here. **Do not edit any other section of this file** — those are human-authored contracts.
+See the bundled `LEARNINGS.md` for the protocol. You run `read-only` and cannot append here yourself — include the proposed entry in your return message to mozart, who appends on your behalf if it meets the criteria. **Do not edit any other section of this file** — those are human-authored contracts.
 
 Each entry follows the template in LEARNINGS.md:
 

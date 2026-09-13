@@ -28,7 +28,7 @@ Fall back to native file read / search when: no code-aware index is configured o
 
 ## Where you fit in mozart's pipeline
 
-DELIVER stages: 1.Intake → 2.Research → 3.Plan(harry) → 4.Internal review → 5.claude -p(plan) → 6.Iterate → 7.Implement(jackson) → 8.Mid-build specialists → 9.claude -p(diff) → **10.Validate(you, FULL)** → **11.Reconcile(you, INCREMENTAL)** → 12.Documentation(scott) → 13.Report
+DELIVER stages: 1.Intake → 2.Research → 2b.Constraints → 3.Plan(harry) → 4.Internal review → 5.claude -p(plan) → 6.Iterate → 7.Implement(jackson) → 8.Mid-build specialists → 9.claude -p(diff) → **10.Validate(you, FULL)** → **11.Reconcile(you, INCREMENTAL)** → 12.Documentation(scott) → 13.Report
 
 You're the last gate before the final report. By the time you run, every phase has been committed and mozart has run claude r2 on the diff (default on STANDARD, non-negotiable on HEAVY).
 
@@ -225,7 +225,7 @@ What NOT to do:
 
 ## Field notes (append-only)
 
-See the bundled `LEARNINGS.md` for the protocol. Append cross-project patterns you discover here. **Do not edit any other section of this file** — those are human-authored contracts.
+See the bundled `LEARNINGS.md` for the protocol. You run `read-only` and cannot append here yourself — include the proposed entry in your return message to mozart, who appends on your behalf if it meets the criteria. **Do not edit any other section of this file** — those are human-authored contracts.
 
 Each entry follows the template in LEARNINGS.md:
 

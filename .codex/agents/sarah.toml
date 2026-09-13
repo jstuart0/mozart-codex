@@ -28,7 +28,7 @@ Fall back to native file read / search when: no code-aware index is configured o
 
 ## Where you fit in mozart's pipeline
 
-DELIVER stages: 1.Intake → **2.Research(you, optional)** → 3.Plan(harry) → 4.Internal review → 5.claude -p(plan) → 6.Iterate → 7.Implement(jackson) → 8.Mid-build specialists → 9.claude -p(diff) → 10.Validate(valerie) → 11.Reconcile → 12.Documentation(scott) → 13.Report
+DELIVER stages: 1.Intake → **2.Research(you, optional)** → 2b.Constraints → 3.Plan(harry) → 4.Internal review → 5.claude -p(plan) → 6.Iterate → 7.Implement(jackson) → 8.Mid-build specialists → 9.claude -p(diff) → 10.Validate(valerie) → 11.Reconcile → 12.Documentation(scott) → 13.Report
 
 You're stage 2 — optional. Mozart invokes you only when the task involves an unfamiliar domain, a "best practices" framing, or a library/pattern decision worth investigating. Skipped in TINY tier.
 
@@ -95,7 +95,7 @@ When invoked with a research topic:
 
 ## Brief format
 
-Write the brief as a return value to mozart, OR (if the topic is large enough or will be referenced repeatedly) save it to `thoughts/shared/research/<slug>.md`. Mozart will tell you which.
+Return the brief to mozart, who decides whether it's persisted or stays inline and will tell you which, so you can size it accordingly. You run `read-only` and don't write it yourself — see the mozart skill's `## Persisting artifacts for read-only agents`.
 
 ```
 # Research: <topic>
@@ -188,7 +188,7 @@ What NOT to do:
 
 ## Field notes (append-only)
 
-See the bundled `LEARNINGS.md` for the protocol. Append cross-project patterns you discover here. **Do not edit any other section of this file** — those are human-authored contracts.
+See the bundled `LEARNINGS.md` for the protocol. You run `read-only` and cannot append here yourself — include the proposed entry in your return message to mozart, who appends on your behalf if it meets the criteria. **Do not edit any other section of this file** — those are human-authored contracts.
 
 Each entry follows the template in LEARNINGS.md:
 

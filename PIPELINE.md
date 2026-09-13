@@ -67,6 +67,7 @@ Support agents (tool specialists, not personas):
 ```
 1.  Intake          — mozart restates, classifies tier, context, and mode; confirms flow; creates state file + flow sketch
 2.  Research        — sarah (+ codebase-pattern-finder, web-search-researcher) in parallel — OPTIONAL, skipped in TINY
+2b. Constraints     — mozart, CONDITIONAL — who-may-do-what → xander; published guarantee in this repo → ian; skipped if neither trigger fires
 3.  Plan            — harry drafts → thoughts/shared/plans/<slug>.md
 4.  Internal review — bob (always) + librarian (BROWNFIELD) + xander/dexter/ruby/otto/tessa/percy (conditional, parallel)
 5.  Claude on plan   — claude CLI external review → <slug>.claude-r1-plan.md
@@ -87,6 +88,7 @@ Support agents (tool specialists, not personas):
 | Stage | TINY | STANDARD | HEAVY |
 |---|---|---|---|
 | Research (2) | skip | optional | optional |
+| Constraints (2b) | skip | conditional | conditional |
 | Plan-review fan-out (4) | skip | conditional | conditional |
 | Claude r1 on plan (5) | skip | run | run |
 | Mid-build specialists (8) | skip | conditional | ian + xander mandatory; others conditional |
@@ -150,7 +152,7 @@ For investigating a specific failure (bug, regression, test failure, performance
 
 ```
 1. Intake     — mozart restates symptom, captures evidence, identifies scope; creates state file + flow sketch
-2. Investigate— dick reproduces, isolates, identifies root cause → thoughts/shared/investigations/<slug>.md
+2. Investigate— dick reproduces, isolates, identifies root cause; returns findings, mozart persists to thoughts/shared/investigations/<slug>.md
 3. Decision   — user picks: report only, or remediate
                   └─ Remediate: enter DELIVER at stage 3 (Plan) with findings as harry's brief;
                      stage 2 (Research) is typically skipped — dick's investigation covers it
@@ -272,8 +274,8 @@ A passthrough can graduate to a flow if the user follows up with "now fix it" or
 | Flow | Trigger phrases | Stops after |
 |---|---|---|
 | **FULL** (default) | (default) | Stage 13 |
-| **PLAN-ONLY** | "just plan it," "stop at the plan," "give me a bulletproof plan" | Stage 6 |
-| **RESEARCH-ONLY** | "just research," "find out what we should use" | Stage 2 |
+| **PLAN-ONLY** | "just plan it," "stop at the plan," "give me a bulletproof plan" | Stage 6 (includes 2b when triggered) |
+| **RESEARCH-ONLY** | "just research," "find out what we should use" | Stage 2 — 2b never runs, since it only feeds a plan this flow doesn't produce |
 | **INVESTIGATE-ONLY** | "investigate X," "diagnose Y," "why is Z broken" | DIAGNOSE stage 3 (decision point) |
 | **AUDIT-ONLY** | AUDIT shape, user picks "report only" at decision point | AUDIT stage 5 |
 | **OPERATE-PLAN-ONLY** | "plan the change but don't apply it," "give me the change plan + rollback" | OPERATE stage 3 (change plan) |
@@ -289,6 +291,8 @@ A passthrough can graduate to a flow if the user follows up with "now fix it" or
 | "get a claude read on this plan" | Stage 5 (Claude on plan) |
 | "validate this branch against the plan" | Stage 10 (Validate, VALIDATE-ONLY) |
 | "resume `<slug>`" / "pick up where we left off" | Wherever the state file's `Current stage` says |
+
+2b has no entry point of its own — it's evaluated automatically at intake, never invoked by a standalone user request.
 
 ### State persistence
 

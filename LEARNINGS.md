@@ -82,26 +82,11 @@ Field notes accumulate. Periodically the user (or mozart, on request) should:
 
 Agents do not perform pruning or promotion on their own initiative. The "review my field notes" passthrough route in mozart surfaces these for the user.
 
-## How agents without Edit/Write capability append
+## How read-only agents append (they don't — mozart does)
 
-Most agents have either `Edit` (Edit tool) or `Bash` (heredoc append). For those with only `Bash`:
+Capability here is governed entirely by `sandbox_mode` (`docs/CODEX_PORT.md:47`). The 8 `workspace-write` personas (bob, hank, harry, jackson, percy, ruby, scott, tessa) append directly with a file edit tool. Under `read-only` every filesystem write is blocked — confirmed empirically, not assumed (the capability-claim parity campaign's Phase 0) — so there is no `Bash`-heredoc fallback for the other 12: it fails exactly like any other write attempt.
 
-```bash
-# Resolve to wherever your persona file is installed (plugin path or ~/.claude/agents/)
-cat >> "<path-to-your-persona-file>" <<'EOF'
-
-### YYYY-MM-DD — <summary>
-
-- **Scope**: ...
-- **Confidence**: ...
-- **Evidence**: ...
-- **The pattern**: ...
-- **What to do differently**: ...
-
-EOF
-```
-
-Agents with no write capability (ian, sarah, codebase-* agents) cannot self-update. Instead, they include the proposed learning in their return message to mozart, who can write it on their behalf if it meets the criteria above. Mozart treats this as a delegated append, not a free hand to rewrite.
+Agents with no write capability (codebase-analyzer, codebase-locator, codebase-pattern-finder, dexter, dick, ian, librarian, otto, sarah, valerie, web-search-researcher, xander — all 12 `read-only` personas) cannot self-update. Instead, they include the proposed learning in their return message to mozart, who can write it on their behalf if it meets the criteria above. Mozart treats this as a delegated append, not a free hand to rewrite.
 
 ## Anti-patterns (things that have actually gone wrong with self-modifying systems)
 

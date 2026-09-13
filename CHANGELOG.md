@@ -4,6 +4,8 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-13
+
 ### Added (field-notes harvest, 2026-09-13)
 - Four prose field notes ported from the unmerged `learnings/2026-09-09-mozart-local-field-notes`
   branch of mozart-orchestration: jackson gains one entry (mutation testing finds missing tests, not

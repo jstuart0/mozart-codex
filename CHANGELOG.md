@@ -4,6 +4,26 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Added (field-notes harvest, 2026-09-13)
+- Four prose field notes ported from the unmerged `learnings/2026-09-09-mozart-local-field-notes`
+  branch of mozart-orchestration: jackson gains one entry (mutation testing finds missing tests, not
+  weak ones); mozart's `SKILL.md` gains three (state known-wrong facts in the brief; scope empirical
+  findings to platform/version/date; an unattended run needs a decision log).
+- Three findings from the same branch are installed as **procedural mechanisms** rather than prose,
+  because prose contracts inside a persona were shown not to change behavior: M2 (verify the
+  measuring instrument against a known-FAIL case before trusting it) and M7 (every counting/globbed
+  check needs a population floor and a named member, to rule out vacuity and coincidence) are added
+  to `harry.toml`'s Verification section; M4 (after a plan revision, name the pre-revision sections a
+  mechanism touches) is added to `SKILL.md`'s stage-6 Iterate procedure.
+- `harry.toml` also receives the minimal 7-line Automated/Manual convention subset (the two-list
+  shape plus the binding clause) so M2/M7 attach to a real field rather than referencing one that
+  doesn't exist in this port's Verification section. Porting the full 24-line convention is out of
+  scope for this change.
+- **This port has no gate suite and no CI** (`.github` does not exist here), so all three mechanisms
+  are enforced procedurally only — by the agent reading and following them — not by any automated
+  check. Cross-port agreement with mozart-orchestration and mozart-copilot is verified by hand with
+  `check-field-note-parity.py`, run from mozart-orchestration against all three worktrees pre-merge.
+
 ### Added (parity sync with mozart-orchestration, 2026-07-22: INCIDENT shape)
 - **INCIDENT** — sixth work shape: respond to a **live outage** (service down or
   badly degraded *right now*). The time-critical form of DIAGNOSE — it

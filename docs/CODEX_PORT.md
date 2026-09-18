@@ -128,6 +128,14 @@ is harness-neutral and stays as written.
   skill/AGENTS.md the conductor reads.
 - **Skill as entry point.** Verify a Codex skill can act as the `/mozart`
   top-level entry that then orchestrates, mirroring the slash-command role.
+- **Missing upstream commit `e9232c0` (disclosed, not yet ported).** This port
+  predates orchestration's `.mozart/` artifact-root convention, its worktree
+  isolation, and hank's version-resolution step — and correspondingly has no
+  stage 12b or its lint check (`missing-12b`). `scripts/mozart-lint.sh` and
+  `scripts/mozart-metrics.sh` already read both `.mozart/` and
+  `thoughts/shared/` so a target repo on either convention lints cleanly; the
+  rest (worktree isolation, the version-resolution gate, 12b itself) is
+  scoped as its own follow-up campaign.
 
 ## Work breakdown
 

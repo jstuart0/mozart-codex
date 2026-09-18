@@ -4,6 +4,59 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Added — conductor self-verification: mozart's own derived claims get a control, a linkage, and a lint
+
+Ported from `mozart-orchestration`'s conductor-self-verification campaign. mozart's own conclusions
+— a check it ran, a dispute it settled, a fact it copied into a brief — now carry the same discipline
+M2/M7 already demand of everyone else's checks.
+
+1. **The conductor record** (`## Conductor record`, new state-file section in `SKILL.md`'s template)
+   — one row per derived claim (`check` | `adjudication` | `fact`), with a linked gate/finding/
+   correction id and a control that could have shown the claim false. A ticked row-required gate key
+   (DELIVER `5 9 10 13 P<N>`, OPERATE `1:fact 4 6`, INCIDENT `1 5`) needs a linked row; the section
+   may stay empty only while no such obligation exists.
+2. **Dispute handling when mozart is a party** — settled by a third source (a command neither side
+   wrote) in a linked `adjudication` row, or escalated to the operator or a fresh, unanchored dick.
+   A design judgment no command could settle is dispositioned **`rejected (judgment)`** with a
+   decisions-log citation; **`rejected (user)`** remains the user-overruled case. Both are new
+   findings-ledger dispositions alongside `fixed`/`rejected`/`accepted-risk`.
+3. **A decisions log** (`<slug>.decisions.md`): every judgment call gets a decision, reasoning,
+   bounds, and a revisit trigger.
+4. **The mutation manifest** — one field (or a coupled set with a stated rationale) per OPERATE/
+   INCIDENT mutation, with literal `ignore:` field paths for what a read-back may skip and
+   `<redacted>` for secret-bearing values. Landed in `SKILL.md`'s OPERATE/INCIDENT sections,
+   `hank.toml`'s Apply step, and `otto.toml`'s change-plan bullet.
+5. **`scripts/mozart-lint.sh` and `scripts/mozart-metrics.sh` now read both artifact roots**
+   (`.mozart/` and `thoughts/shared/`), matching `mozart-orchestration`'s dual-root support — a
+   target repo following either convention lints and aggregates cleanly.
+6. **Lint Checks K and L** (`conductor-missing`, `conductor-unlinked`, `conductor-row`,
+   `conductor-reference`, `decision-trigger`, `mutation-manifest`). `MOZART_LINT_CONDUCTOR_SINCE`
+   overrides the adoption-date constant as a fixture test hook; every run that sets it prints
+   `conductor adoption date overridden: <value>` before any finding, so the override can never be
+   silent.
+7. **Check J** (`missing-2b`, DELIVER-family campaigns missing their `2b. Constraints` row) is new
+   to this port — it fires only when the Flow field resolves to the DELIVER family, or is
+   unparseable and the file has stage rows `2.`, `3.` and `12.`.
+8. **Pre-existing drift fixed alongside**: `SKILL.md`'s state-file template gains the
+   `## Degraded controls` section it was missing; `jackson.toml` gains the mid-build M2/M7 bullet it
+   was missing; `SKILL.md`'s per-phase gate bullet is restored to name the plan's Automated commands
+   convention (`tagged (phase N)`) and its secret-scan bullet regains the empty-input liveness
+   sentences, matching source. Restructuring the linter onto source's dual-root shape also brought
+   source's current Check D/E stage-letter handling (a `12b` duplicate now reports as `12b`, not
+   `12`) and its `## Paths`-scoped Check G, both of which this port had predated.
+9. `scripts/mozart-metrics.sh` gains a `== conductor ==` block: campaigns carrying a conductor record
+   (and how many are exempt), conductor rows by kind, controlled check/adjudication rows, unverified
+   facts, and the wrong-override rate (rejected findings later reversed, with a `rejected (judgment)`
+   share). It also fixes the same findings/escapes placeholder-detection bug as source: a literal `<`
+   anywhere in the line used to skip real findings, not just template placeholder cells.
+
+**Known gap, disclosed rather than silently ignored**: this port does not implement source's
+`missing-12b` check (Check I). codex has no stage 12b — it lacks upstream commit `e9232c0` (the
+`.mozart/` artifact-root convention as a persona-level fallback, worktree isolation, and hank's
+version-resolution step). Porting Check I unmodified would flag every codex DELIVER campaign for a
+stage this port doesn't run. Both gaps are scoped as their own follow-up campaign; the scripts above
+already read both artifact roots so that campaign has less to change.
+
 ## [0.1.0] - 2026-09-13
 
 ### Added (field-notes harvest, 2026-09-13)

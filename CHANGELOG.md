@@ -50,6 +50,25 @@ M2/M7 already demand of everyone else's checks.
    share). It also fixes the same findings/escapes placeholder-detection bug as source: a literal `<`
    anywhere in the line used to skip real findings, not just template placeholder cells.
 
+**Reconciliation round 1** (mirrored from source's external pre-merge review, F47-F52). Checks K/L
+claimed the same current+legacy scope as Checks C/D and did not have it: the legacy prefixless flat
+glob (`plans/<date>-<slug>.state.md`) was missing, and the adoption date was read off the raw
+basename, so every `active-`/`finished-` prefixed file classified as pre-adoption regardless of its
+date — a post-adoption state file with no `## Conductor record` linted clean in either layout.
+Conductor and change-ledger rows were split on a raw `|`, so a `source` cell holding a shell pipeline
+shifted every later cell and an **empty control parsed as filled**; `SKILL.md` said "no literal pipe"
+and nothing enforced it. Both tables now honour `\|` as an escaped pipe and reject any row whose cell
+count disagrees with its header (`conductor-row` / `mutation-manifest`), with the finding deferred to
+`END` so it stays behind PD1's adoption gate. `mozart-metrics.sh` applies the same rule and prints
+the count of rows it skipped rather than tallying a shifted row as controlled. Roots and file lists
+were whitespace-delimited strings in `mozart-metrics.sh` and Check F word-split an unquoted
+`$(find ...)`, so a checkout under a path containing a space reported "no state files" and a stale
+campaign there went unreported; both are NUL-delimited arrays now. Finally, PD1's adoption gate has
+two limbs — slug date on or after the cutoff, **or** a header already present — and `decision-trigger`
+implemented only the first, so a campaign carrying a conductor record with a pre-cutoff slug date had
+its rows checked while its decisions log went unchecked. Parity with source is proven by
+`scripts/check-field-note-parity.py`'s `behaviour` subcommand against source's fixture corpus.
+
 **Known gap, disclosed rather than silently ignored**: this port does not implement source's
 `missing-12b` check (Check I). codex has no stage 12b — it lacks upstream commit `e9232c0` (the
 `.mozart/` artifact-root convention as a persona-level fallback, worktree isolation, and hank's

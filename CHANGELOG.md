@@ -33,7 +33,9 @@ M2/M7 already demand of everyone else's checks.
    `conductor-reference`, `decision-trigger`, `mutation-manifest`). `MOZART_LINT_CONDUCTOR_SINCE`
    overrides the adoption-date constant as a fixture test hook; every run that sets it prints
    `conductor adoption date overridden: <value>` before any finding, so the override can never be
-   silent.
+   silent. **Check L shares Check K's PD1 adoption boundary** rather than carrying a second copy of
+   it, so a pre-adoption campaign's change-ledger rows are never flagged — including rows written
+   before the manifest column existed — while a post-adoption campaign gets no grandfathering.
 7. **Check J** (`missing-2b`, DELIVER-family campaigns missing their `2b. Constraints` row) is new
    to this port — it fires only when the Flow field resolves to the DELIVER family, or is
    unparseable and the file has stage rows `2.`, `3.` and `12.`.
@@ -68,6 +70,13 @@ two limbs — slug date on or after the cutoff, **or** a header already present 
 implemented only the first, so a campaign carrying a conductor record with a pre-cutoff slug date had
 its rows checked while its decisions log went unchecked. Parity with source is proven by
 `scripts/check-field-note-parity.py`'s `behaviour` subcommand against source's fixture corpus.
+
+### Changed
+
+- `.codex/skills/mozart/SKILL.md` drops the "An unattended run needs a decision log" field note —
+  promoted into the decisions-log mechanism it described (item 3 above). mozart's field-note count
+  goes from three to two; jackson's is unchanged. The 0.1.0 entry below, which records that note
+  arriving, is history and is left as written.
 
 **Known gap, disclosed rather than silently ignored**: this port does not implement source's
 `missing-12b` check (Check I). codex has no stage 12b — it lacks upstream commit `e9232c0` (the

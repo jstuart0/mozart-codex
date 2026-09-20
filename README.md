@@ -39,6 +39,7 @@ full pipeline.
 | dexter | Code-health audit |
 | xander | Security audit |
 | otto | Infra / Kubernetes review (+ OPERATE change-plan author) |
+| nina | Cloud specialist — resolves provider-behaviour assertions against a current source |
 | hank | Ops executor — applies changes to live infrastructure (OPERATE) |
 | ruby | UI/UX design + frontend |
 | ian | Change-impact / blast-radius |

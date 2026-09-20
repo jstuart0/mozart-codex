@@ -101,12 +101,16 @@ The persona *body* ports nearly verbatim. Mechanical swaps applied per agent:
    Swept to completion by the capability-vs-claim parity campaign
    (`.mozart/plans/active/2026-09-12-deliver-capability-claim-parity.md`): the
    last 6 stale bold tool-noun references (`**Bash**`, `**WebFetch**`) on
-   `dick.toml` and `tessa.toml` are gone; 0 remain across all 20 personas.
+   `dick.toml` and `tessa.toml` are gone; 0 remain across the 20 personas that
+   existed at the time of that sweep. `nina.toml` (added later) carries none
+   either. NOTE the sweep targeted the **bold** form: backticked `Read` still
+   appears in 12 personas, which is residue from that sweep rather than a new
+   divergence, and nina inherits the same convention.
 3. `ToolSearch` / "deferred tool" friction → "MCP/skill load" framing.
 4. "single parallel tool-call message" → "parallel fan-out (`max_threads`)".
 5. Tool-list front matter → `sandbox_mode` (read-only for reviewers/auditors;
    workspace-write for bob, hank, harry, jackson, percy, ruby, scott, tessa —
-   8 of 20 personas, not 4).
+   8 of 21 personas, not 4).
 6. "bundled PIPELINE.md / LEARNINGS.md / mozart persona" → same files shipped
    under `.codex/` alongside the agents.
 7. `codex exec` review references (in mozart.md) → `claude -p` review.
@@ -141,7 +145,7 @@ is harness-neutral and stays as written.
 
 1. **POC (this doc):** translate jackson → `.codex/agents/jackson.toml`. ✅
 2. Translate the other 13 personas (mechanical, per the rules above). ✅ — shipped
-   as 20 personas at `.codex/agents/*.toml`.
+   as 21 personas at `.codex/agents/*.toml`.
 3. ~~Author the mozart conductor as `.codex/agents/mozart.toml`~~ — **stale.**
    There is no `mozart.toml` and there will not be one: the conductor shipped as
    a skill, `.codex/skills/mozart/SKILL.md`, not an agent. ✅ — done, differently

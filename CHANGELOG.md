@@ -4,6 +4,38 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Added — nina, a cloud specialist, and a widened HEAVY trigger
+
+Ported from `mozart-orchestration` as **`.codex/agents/nina.toml`**; the roster goes
+**20 → 21** personas. **nina** reviews *assertions about how a cloud
+provider behaves* — support or deprecation status, a quota or limit, a blocked or
+permitted action, "cannot be moved", a permission conclusion — by resolving each
+against a current provider source instead of recalling it. Her evidence base is AWS;
+on Azure and GCP she applies the same method with no accumulated trap knowledge, and
+live provider reads are AWS-only. She reviews and never mutates, never authors an
+OPERATE change plan, and never issues a security severity.
+
+Her read rules are a conjunction — an allowed verb, a non-denied bucket **and** a
+projection matching a grammar allowlist with a declared value kind from a closed set
+of seven — and they are carried from the upstream parity snippets **S22a** and **S22b**
+**byte-exact, with zero divergence**. The rules are frozen as two contiguous spans with
+a per-edition adjunct between them, so no frozen line names a tool this edition does not
+have; the adjunct is the only place a tool name appears.
+
+**`sandbox_mode = "read-only"` bars no provider API call.** It is a filesystem
+setting; Codex has no per-tool allowlist. `nina.toml` says so in its own body, because
+this is the edition most likely to be mistaken for enforced.
+
+The review-role IAM skeleton that is the enforcement half of those rules **does not ship
+in this edition**. `nina.toml` cites it at `tests/policy/nina-review-role.json`, which is a
+path in `mozart-orchestration`, not here — this repo has no `tests/` tree. Fetch it from
+upstream before granting live-read mode; a role nobody adapted is not an enforced one.
+
+Landed separately and first: the **HEAVY trigger now classifies access-control changes
+at any layer**, not just Kubernetes RBAC. An identity-plane change previously
+classified STANDARD and skipped the pre-flight gate entirely. That fix is independent
+of nina and survives a revert of the rest.
+
 ### Added — conductor self-verification: mozart's own derived claims get a control, a linkage, and a lint
 
 Ported from `mozart-orchestration`'s conductor-self-verification campaign. mozart's own conclusions

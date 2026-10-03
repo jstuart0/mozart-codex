@@ -24,13 +24,13 @@ The single source of truth is the **EVAL pipeline** section of the bundled `.cod
 - If the user named repos (as arguments or in conversation), use those.
 - Otherwise, ask which project directories to evaluate — do not assume a directory layout or scan the filesystem for candidates uninvited.
 - **First run (no ledger)**: this is the baseline run — full inventory of each named repo's campaign artifacts, no delta to compute. Say so, and give a rough cost expectation before fanning out.
-- **Subsequent runs**: compute the delta from the ledger (new slugs, changed state-file hashes) and scope the deep reads to it. Unchanged campaigns are only revisited under a lens the ledger shows was never applied to them.
+- **Subsequent runs**: compute the delta from the ledger (new slugs, changed `state_md5` values — the state file plus its sibling `<slug>.ledger.md` and `<slug>.conductor.md`) and scope the deep reads to it. Unchanged campaigns are only revisited under a lens the ledger shows was never applied to them.
 
 ### 4. Run the stages
 
 Follow the persona's EVAL pipeline stages exactly. Highlights the persona covers in full:
 
-- Mechanical metrics come from the bundled `scripts/mozart-lint.sh` and `scripts/mozart-metrics.sh` (resolve both relative to the installed port), one run per repo — the latter's `== conductor ==` block feeds the conductor-record table in `docs/EVAL.md`.
+- Mechanical metrics come from the bundled `scripts/mozart-lint.sh` and `scripts/mozart-metrics.sh` (resolve both relative to the installed port; `scripts/lib-campaign.sh` must sit beside them, or either exits 3), one run per repo — the latter's `== conductor ==` block feeds the conductor-record table in `docs/EVAL.md`.
 - Fix verification is the load-bearing stage: read the previous report's "verification targets," measure each against campaigns that ran after the fix landed, and treat an unmoved metric as a first-class finding.
 - Qualitative sampling fans out parallel analyst subagents over the delta — brief them with the artifact conventions (state/flow/plan file formats from the persona) and ask for evidence-cited findings, not impressions.
 - Configuration fixes to agent TOMLs / skill files are contract edits: apply directly only if the user maintains the port checkout; otherwise propose (project-level `.codex/agents/` override / field note / upstream PR) and record the route.

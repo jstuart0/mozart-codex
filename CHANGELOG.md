@@ -4,6 +4,35 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Changed — campaign scripts and the conductor-record snippet, from mozart-orchestration's `2026-10-03-deliver-eval-efficiency-fixes`
+
+Only the parts this port cannot run without; the persona prose of that campaign
+(the no-progress stop, the LIGHT tier, the split-layout instructions, the state
+templates, the escapes grammar) is not ported yet.
+
+- **`scripts/lib-campaign.sh`** (new, byte copy) holds the sibling-file rule and
+  the awk helpers lint and metrics share. Both scripts source it from beside
+  themselves and exit 3 when it is missing or empty, so the three files travel
+  together.
+- **`scripts/mozart-lint.sh`** and **`scripts/mozart-metrics.sh`** are re-merged
+  from upstream: the ledger and conductor record are read from files beside the
+  state file as well as from inside it, CRLF state files are read, and lint gains
+  `split-layout` and `escape-unrecorded` (sixteen categories here; `missing-12b`
+  stays omitted — no stage 12b), the HEAVY surface-record rule dated by
+  `MOZART_LINT_LENS_SINCE` (default 2026-10-04), and the stricter Tier parse.
+  The only code differences from upstream are still the omitted Check I, the
+  `Claude|Codex` review-label match and the `review-drift` category name.
+- **Deliberate deviation (D13):** the default of `MOZART_LINT_LENS_SINCE` in this port's `mozart-lint.sh` is `9999-12-31`, so the dated HEAVY surface-record rules are dormant until set, because this port's manual does not yet tell its conductor to write one; revisit when the ports plan lands that prose.
+- **`.codex/skills/mozart/SKILL.md`**: the conductor-record snippet carries the
+  `P<N>:heavy` row-required key and the Tier-line rule; the linter paragraph
+  names the sixteen categories and the library.
+- **`state_md5`** now covers the state file plus its sibling ledger and conductor
+  files (`SKILL.md` stages 1 and 6 of the EVAL pipeline, `mozart-eval/SKILL.md`,
+  `docs/EVAL.md`), and the lint column list in the report template gains
+  `split-layout` and `escape-unrecorded`. A reader that predates the siblings
+  misses a change made only to one, so the first eval after this re-examines every
+  split campaign once.
+
 ### Added — nina, a cloud specialist, and a widened HEAVY trigger
 
 Ported from `mozart-orchestration` as **`.codex/agents/nina.toml`**; the roster goes

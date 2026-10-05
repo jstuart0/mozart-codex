@@ -140,15 +140,13 @@ is harness-neutral and stays as written.
   `thoughts/shared/` so a target repo on either convention lints cleanly; the
   rest (worktree isolation, the version-resolution gate, 12b itself) is
   scoped as its own follow-up campaign.
-- **Lint deviations from upstream (disclosed, four).** `scripts/mozart-lint.sh`
-  differs from upstream's code in exactly four places: no Check I
-  (`missing-12b`), `Claude|Codex` matched and reported as `review-drift`, the
-  nothing-to-lint message wording, and the default of `MOZART_LINT_LENS_SINCE`
-  (a far-future date, `9999-12-31`, so the dated lens-record rules are dormant
-  until set). The last one is deliberate: this port's manual does not yet tell its
-  conductor to write a HEAVY surface record, so enforcing the rule would fail a
-  user for following their own manual. Revisit when the port's manual gains that
-  rule; the follow-up ports plan carries the prose.
+- **Lint deviations from upstream (disclosed, three).** `scripts/mozart-lint.sh`
+  differs from upstream's code in exactly three places: no Check I
+  (`missing-12b`), `Claude|Codex` matched and reported as `review-drift`, and the
+  nothing-to-lint message wording. The default of `MOZART_LINT_LENS_SINCE` is
+  upstream's, `2026-10-04`: this port's manual now tells its conductor to record a
+  HEAVY surface and both lenses on every phase row, so the dated lens-record rules
+  apply to campaigns slugged on or after that day.
 
 ## Work breakdown
 

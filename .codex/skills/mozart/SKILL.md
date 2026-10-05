@@ -353,6 +353,7 @@ Each campaign maintains its own (see *Run identification and prior-art discovery
 - **Flow sketch**: `thoughts/shared/plans/<slug>.flow.md`
 - **Plan file**: `thoughts/shared/plans/<slug>.md`
 - **Decisions log**: `thoughts/shared/plans/<slug>.decisions.md` (from the first judgment call)
+- **Findings ledger** and **conductor record**: `thoughts/shared/plans/<slug>.ledger.md` and `thoughts/shared/plans/<slug>.conductor.md` (beside the state file in campaigns created split)
 - **Investigation** (if DIAGNOSE): `thoughts/shared/investigations/<slug>.md`
 - **ticket**: separate ticket per campaign in the repo's ticketing project
 - **Worktree** (when isolation is used): tracked in the state file's metadata
@@ -552,7 +553,7 @@ Don't import their full content unless asked — just surface that they exist an
 
 You write a durable state file alongside every plan so that a new mozart instance — or any agent — can pick up after a crash, power loss, session end, or context reset. **The conversation context is volatile; the state file is not.** Treat it as the source of truth for "where are we?"
 
-**Location**: `thoughts/shared/plans/active/<slug>.state.md` while the campaign is active; `thoughts/shared/plans/finished/<slug>.state.md` once complete (see *Directory convention* below).
+**Location**: `thoughts/shared/plans/active/<slug>.state.md` while the campaign is active; `thoughts/shared/plans/finished/<slug>.state.md` once complete (see *Directory convention* below). A new campaign's findings ledger and conductor record live beside it as `<slug>.ledger.md` and `<slug>.conductor.md`; the state file is the entry point and the source of truth for status.
 
 ### Directory convention (active / finished subdirectories)
 
@@ -573,26 +574,29 @@ thoughts/shared/plans/
     2026-05-04-deliver-paperless-deployment.flow.md
     2026-05-04-deliver-paperless-deployment.md           # the plan
     2026-05-04-deliver-paperless-deployment.decisions.md
+    2026-05-04-deliver-paperless-deployment.ledger.md      # findings ledger (campaigns created split)
+    2026-05-04-deliver-paperless-deployment.conductor.md   # conductor record (campaigns created split)
+    2026-05-04-deliver-paperless-deployment.validation.md
 ```
 
-When the campaign reaches `Status: complete` (final report stage), move all three artifacts together from `active/` to `finished/`:
+When the campaign reaches `Status: complete` (final report stage), move **every artifact the slug owns** from `active/` to `finished/` — by glob, never by an enumerated extension list:
 
 ```bash
 slug="2026-05-04-deliver-paperless-deployment"
-for ext in state.md flow.md md; do
-  mv "thoughts/shared/plans/active/${slug}.${ext}" "thoughts/shared/plans/finished/${slug}.${ext}"
-done
+mv thoughts/shared/plans/active/${slug}.* thoughts/shared/plans/finished/
 ```
+
+An enumerated list moves the extensions it names and strands every sibling it doesn't — the ledger and conductor files, the validation report, the claude review artifacts. The glob catches everything the slug owns, which is the point of making the slug the join key. See *Campaign closeout* for the full transaction; this is the same command, repeated here because this is where the directory convention is defined.
 
 When the campaign aborts, move to `aborted/` instead. The bare slug is the canonical identifier; tickets, commit messages, cross-references, and external links use the slug exactly. The directory is filesystem-only — it makes discovery cheap (`ls thoughts/shared/plans/active/*.state.md`) without reading file contents.
 
-The move is a single state transition: do all three files in one operation. If any move fails, undo the others and surface the error rather than leave the artifacts inconsistent.
+The move is a single state transition: every file in one operation. If any move fails, undo the others and surface the error rather than leave the artifacts inconsistent.
 
 **Source of truth is the `Status` field**, not the directory. If they ever drift (e.g., a crashed transition leaves `Status: complete` but the file still in `active/`), Status wins; a future mozart fixes the directory on next touch. The stage 13 corruption check verifies the invariant.
 
 **Same convention across all four artifact roots** when the artifact has a lifecycle:
 
-- `thoughts/shared/plans/active/<slug>.{state,flow,}.md` — the campaign's plan + state + flow + decisions log
+- `thoughts/shared/plans/active/<slug>.*` — every artifact the slug owns: plan, state (with its `.ledger.md` and `.conductor.md` siblings), flow, decisions log, validation report, claude reviews
 - `thoughts/shared/investigations/active/<slug>.md` — dick's findings doc (active while the investigation drives downstream remediation; moves to `finished/` when the campaign closes)
 - `thoughts/shared/audits/active/<slug>.md` — audit synthesis (active while remediation is open; moves to `finished/` when all child remediation campaigns close)
 - `thoughts/shared/research/active/<slug>.md` — sarah's brief (rarely has a long lifecycle; usually born-finished and lands directly in `finished/`)
@@ -605,13 +609,15 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 
 ### State file format
 
+The skeletons (the "templates" the rules below name) are the three fenced blocks below, one per file: the state file, the findings ledger and the conductor record. At intake, in one step, write each file with exactly its block's content — as `<slug>.state.md`, `<slug>.ledger.md` and `<slug>.conductor.md` in the campaign's plans directory — then fill every `<…>` field in the state file, including the two `## Paths` lines that declare the siblings. Copy the blocks; don't retype a header from memory. A retyped header is how a row-width mismatch starts, and the linter compares every row against the header it finds. A skeleton holds headers and placeholder rows only; the rows after the blocks show what filled ones look like. The flow-sketch skeleton is the block under *Pipeline flow sketch*, and the report skeleton is the block under stage 13.
+
 ```
 # Pipeline state: <slug>
 
 **Last updated**: <ISO timestamp>
 **Status**: in-progress | stopped | complete | aborted
 **Flow**: FULL | PLAN-ONLY | RESEARCH-ONLY | VALIDATE-ONLY | INVESTIGATE-ONLY | OPERATE-FULL | OPERATE-PLAN-ONLY | INCIDENT-FULL | MITIGATE-ONLY
-**Tier**: TINY | STANDARD | HEAVY
+**Tier**: TINY | LIGHT | STANDARD | HEAVY
 **Context**: GREENFIELD | BROWNFIELD
 **Mode**: AUTONOMOUS | LOOP-IN
 **Authoritative checkout**: <path — the checkout where this state file is canonically maintained; copies in other worktrees are replicas>
@@ -621,10 +627,13 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 - Plan: thoughts/shared/plans/active/<slug>.md
 - Investigation: thoughts/shared/investigations/<slug>.md (or n/a if not bug-shaped)
 - Research brief: <path or n/a>
-- Constraints: <path or n/a>
+- Constraints: <path or n/a — constraint cards from a stage-3 consult or stage 2b>
 - Decisions: <thoughts/shared/plans/active/<slug>.decisions.md, or "none yet">
+- Findings ledger: <thoughts/shared/plans/active/<slug>.ledger.md>
+- Conductor record: <thoughts/shared/plans/active/<slug>.conductor.md>
 - Claude r1 (plan): <path or "not yet run">
 - Claude r2 (diff): <path or "not yet run">
+- Validation report: <path or "not yet run">
 - Worktree: <path + branch while the campaign runs, or n/a — merge disposition recorded at closeout>
 
 ## Tickets
@@ -634,13 +643,13 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 <sha at intake>
 
 ## Stage progress
-- [x] 1. Intake — <timestamp>
-- [x] 2. Research — <timestamp> — <agents that ran, or "skipped">
-- [-] 2b. Constraints — skipped: no trigger
-- [x] 3. Plan — <timestamp>
-- [x] 4. Internal review — <timestamp> — <reviewers invoked>
-- [x] 5. Claude on plan — <timestamp>
-- [x] 6. Iterate — <timestamp> — <round count>
+- [ ] 1. Intake — <timestamp>
+- [ ] 2. Research — <timestamp> — <agents that ran, or "skipped">
+- [ ] 2b. Constraints — <timestamp> — <lens invoked, or "skipped: no trigger">
+- [ ] 3. Plan — <timestamp>
+- [ ] 4. Internal review — <timestamp> — <reviewers invoked>
+- [ ] 5. Claude on plan — <timestamp>
+- [ ] 6. Iterate — <timestamp> — <round count>
 - [ ] 7. Implement — in progress, phase <N> of <total>
 - [ ] 8. Mid-build specialists (per phase)
 - [ ] 9. Claude on diff — <run|skip per tier>
@@ -650,8 +659,8 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 - [ ] 13. Report
 
 ## Phase tracker (stage 7)
-- [x] Phase 1: <description> — committed <sha>
-- [x] Phase 2: <description> — committed <sha>
+- [ ] Phase 1: <description> — committed <sha>
+- [ ] Phase 2: <description> — committed <sha>
 - [ ] Phase 3: <description> — <not started | in progress | failed attempt N/3>
 - [ ] Phase 4: <description>
 
@@ -661,42 +670,18 @@ One-shot deliverables that don't have a lifecycle (e.g., a research brief that's
 - Reconciliation round: <N> / 3
 - Consult count: <N> / 2
 
-## Findings ledger
-| id | stage | lens | severity | disposition | note |
-|----|-------|------|----------|-------------|------|
-| F1 | 4-plan-review | xander | High | fixed (plan r2) | <one-line finding summary> |
-| F2 | 8-midbuild-p2 | tessa | High | fixed (<sha>) | <one-line finding summary> |
-| F3 | 9-codex-r2 | codex | Critical | fixed (<sha>) | <one-line finding summary> |
-| F4 | 4-plan-review | bob | Medium | rejected (judgment) | D2: <why the design call stands> |
-| F5 | 10-validate | valerie | High | accepted-risk (user) | <what risk the user accepted> |
-
 ## Escapes
 - (none yet) | Traces-to: <DIAGNOSE/audit slug that found a defect this campaign shipped>, <phase/sha if known>
 
 ## Degraded controls
 - (none) | <stage> | <control that was unavailable> | <what it would have caught> | <what ran instead>
 
-## Conductor record
-| id | kind | claim | links | source | control (command -> observed) | written-to |
-|----|------|-------|-------|--------|-------------------------------|------------|
-| CR1 | <check, adjudication, or fact> | <the conclusion> | <gate key, F-id, or CR-id> | <command + ts, or doc + unverified> | <what would show the claim false -> what it printed> | <every path the claim was copied into> |
-
 ## Change ledger (OPERATE + INCIDENT mitigations)
 | id | target (context/ns/host) | change | manifest (field: old -> new; ignore: paths; coupling) | snapshot path | rollback command | verify (observed) |
 |----|--------------------------|--------|-------------------------------------------------------|---------------|------------------|-------------------|
-| C1 | thor / wiki | applied deployment.yaml (image bump) | spec.template.spec.containers[0].image: api:1.4 -> api:1.5; ignore: metadata.resourceVersion, metadata.generation, metadata.managedFields | thoughts/.../snapshots/wiki-deploy-<ts>.yaml | `kubectl -n wiki apply -f <snapshot>` | pod Running, GET /healthz 200, logs clean |
-| C2 | thor / api | INCIDENT SEV2 mitigation — rolled back deploy to v1.4.2 (accepted-risk: no snapshot, service was down) | deploy/api image: v1.5.0 -> v1.4.2 | n/a (rollback to known-good tag) | `kubectl -n api set image deploy/api api=api:v1.4.2` | 5xx rate 0%, p95 back to 180ms |
 
 ## Timeline (INCIDENT only)
 Append-only, timestamped. The incident spine — survives crashes like the change ledger. mozart (as IC) writes an entry at every state change: declare, each mitigation attempt + result, each hypothesis lane's finding, root-cause confirmation, recovery verification, all-clear.
-```
-- <ISO ts> DECLARE SEV2 — api returning 5xx for ~40% of requests since ~<ts>; users can't checkout
-- <ISO ts> MITIGATE (hank) — rolling back api deploy v1.5.0 → v1.4.2 [C2]
-- <ISO ts> OBSERVE — 5xx rate 40% → 3% → 0% over 90s; service restored (mitigated, not fixed)
-- <ISO ts> LANE what-changed (dick) — v1.5.0 shipped a migration that dropped an index; slug 2026-07-20-...
-- <ISO ts> ROOT CAUSE confirmed — missing index on orders.user_id; query table-scans under load
-- <ISO ts> ALL-CLEAR — durable fix tracked as follow-up DELIVER; SEV downgraded, incident closed
-```
 
 ## Open questions
 <from harry's plan or surfaced during the run; "none" if resolved>
@@ -705,11 +690,54 @@ Append-only, timestamped. The incident spine — survives crashes like the chang
 <chronology only: escalations, stops, hangs, cross-links, anything a resuming agent should know. Judgment calls go in the decisions log, not here>
 ```
 
+```
+# Findings ledger: <slug>
+
+## Findings ledger
+| id | stage | lens | severity | disposition | note |
+|----|-------|------|----------|-------------|------|
+```
+
+```
+# Conductor record: <slug>
+
+## Conductor record
+| id | kind | claim | links | source | control (command -> observed) | written-to |
+|----|------|-------|-------|--------|-------------------------------|------------|
+| CR1 | <check, adjudication, or fact> | <the conclusion> | <gate key, F-id, or CR-id> | <command + ts, or doc + unverified> | <what would show the claim false -> what it printed> | <every path the claim was copied into> |
+```
+
+Stage and phase lines, findings-ledger rows, change-ledger rows and timeline entries, as they read once filled (examples, not skeletons):
+
+    Stage and phase lines (state file), as they read once done:
+    - [x] 1. Intake — <timestamp>
+    - [-] 9. Claude on diff — skipped: <rationale>
+    - [x] Phase 1: <description> — committed <sha>
+
+    Findings ledger rows (<slug>.ledger.md):
+    | F1 | 4-plan-review | xander | High | fixed (plan r2) | <one-line finding summary> |
+    | F2 | 8-midbuild-p2 | tessa | High | fixed (<sha>) | <one-line finding summary> |
+    | F3 | 9-codex-r2 | claude | Critical | fixed (<sha>) | <one-line finding summary> |
+    | F4 | 4-plan-review | bob | Medium | rejected (judgment) | D2: <why the design call stands> |
+    | F5 | 10-validate | valerie | High | accepted-risk (user) | <what risk the user accepted> |
+
+    Change ledger rows (state file, OPERATE + INCIDENT):
+    | C1 | thor / wiki | applied deployment.yaml (image bump) | spec.template.spec.containers[0].image: api:1.4 -> api:1.5; ignore: metadata.resourceVersion, metadata.generation, metadata.managedFields | thoughts/.../snapshots/wiki-deploy-<ts>.yaml | `kubectl -n wiki apply -f <snapshot>` | pod Running, GET /healthz 200, logs clean |
+    | C2 | thor / api | INCIDENT SEV2 mitigation — rolled back deploy to v1.4.2 (accepted-risk: no snapshot, service was down) | deploy/api image: v1.5.0 -> v1.4.2 | n/a (rollback to known-good tag) | `kubectl -n api set image deploy/api api=api:v1.4.2` | 5xx rate 0%, p95 back to 180ms |
+
+    Timeline entries (state file, INCIDENT only):
+    - <ISO ts> DECLARE SEV2 — api returning 5xx for ~40% of requests since ~<ts>; users can't checkout
+    - <ISO ts> MITIGATE (hank) — rolling back api deploy v1.5.0 → v1.4.2 [C2]
+    - <ISO ts> OBSERVE — 5xx rate 40% → 3% → 0% over 90s; service restored (mitigated, not fixed)
+    - <ISO ts> LANE what-changed (dick) — v1.5.0 shipped a migration that dropped an index; slug 2026-07-20-...
+    - <ISO ts> ROOT CAUSE confirmed — missing index on orders.user_id; query table-scans under load
+    - <ISO ts> ALL-CLEAR — durable fix tracked as follow-up DELIVER; SEV downgraded, incident closed
+
 **Skip lines are mandatory.** A skipped stage is recorded in the stage list as `[-] <N>. <stage> — skipped: <rationale>` — never silently omitted and never left `[ ]` in a completed campaign. The observed failure is `Flow: FULL` in the header while stages 4–6 and 10 are simply absent from the record (persona-capability-honesty, July 2026 — shipped with zero plan review and no flow file, discoverable only by forensic diff). Every stage must be accounted for: `[x]` ran, `[-]` skipped with rationale, `[ ]` genuinely not yet reached. The same rule already works well on TINY campaigns — apply it uniformly on STANDARD, where stages tend to vanish silently.
 
 **Edit in place, never append duplicates.** Update a stage line by editing it — a state file with two contradictory "Stage 7" lines (one checked, one not) is worse than a stale one, because a resuming mozart can't tell which is true (observed: store-ctx-decomp carried duplicate stage 7 and 9 entries with conflicting checkmarks at `Status: complete`).
 
-**The findings ledger is how the pipeline's ROI gets measured.** Append one row per Critical/High/Medium finding **at the moment it gets a disposition** — you already owe every external-review Critical/High a disposition before valerie signs off; the ledger is where that disposition lives in structured form. Columns:
+**The findings ledger is how the pipeline's ROI gets measured.** Append one row per Critical/High/Medium finding **at the moment it gets a disposition**, to `<slug>.ledger.md` (the state file itself in a single-file campaign) — you already owe every claude r2 Critical/High a disposition before valerie signs off; the ledger is where that disposition lives in structured form. Columns:
 
 - `stage` — where the finding was raised: `4-plan-review`, `5-codex-r1`, `8-midbuild-p<N>`, `9-codex-r2`, `10-validate`, `11-reconcile`
 - `lens` — the agent (or the external reviewer) that raised it
@@ -719,6 +747,8 @@ Append-only, timestamped. The incident spine — survives crashes like the chang
 Low findings are ledgered only if they were acted on. Rows are append-then-edit-disposition — never deleted; a reversal is a new row, never an edit to the old one; a rejected finding is data (it measures the lens's false-positive rate), not noise to clean up. **Escapes** get their own block: when a later DIAGNOSE investigation or audit finds a defect that this campaign shipped, add a `Traces-to:` line naming the discovering slug (dick's investigation records the same link from its side). A `Traces-to:` line puts the origin campaign's slug first (`Traces-to: <origin-slug>, <phase/sha>`). Anything else first, such as `none`, `n/a`, a ticket id, or `external — <where or why>; <slug>` for an origin with no state file in this repo, names no campaign. The origin's `## Escapes` block must carry a `Traces-to:` line naming the slug of the investigation or post-mortem (its file name up to the first dot), or `mozart-lint.sh` reports `escape-unrecorded`. Keep a campaign that is named but is not the origin out of the label position: put its slug in prose after a non-slug token. Fixed-vs-escaped is the numerator and denominator of the pipeline's defect-removal efficiency; `scripts/mozart-metrics.sh` aggregates both across campaigns.
 
 **`## Degraded controls` is not `## Escapes`.** Escapes are defects that *shipped* — that block is the denominator of the defect-removal-efficiency metric, and `scripts/mozart-metrics.sh` counts its `Traces-to:` rows. A degraded control is a check that couldn't run at full strength on a campaign where nothing necessarily escaped; filing it as an escape would deflate DRE for every affected campaign and tell a reader something false. Example row: `8-midbuild-p2 | no code-aware index configured for this language, fell back to grep | duplicate or shadowed logic a symbol index would flag | codebase-pattern-finder manual sweep`.
+
+**Where the ledger and the conductor record live.** A new campaign is split: `## Findings ledger` is in `<slug>.ledger.md` and `## Conductor record` is in `<slug>.conductor.md`, both created from their templates with the state file at intake. The stage list, change ledger, escapes, degraded controls, timeline and notes stay in the state file. A sibling keeps its section heading, so its rows read exactly as they would in the state file. The sibling of state file `F` is `F` with `.state.md` replaced by `.ledger.md` or `.conductor.md`, in the same directory; the `## Paths` line only declares the file (a `<…>` placeholder or `n/a` is no declaration) and is never used to find it. When a section is in both places the sibling wins, the in-file rows are ignored, and the linter reports the pair as `split-layout`. Each section is independent, so a campaign with an in-file ledger and a sibling conductor record reads correctly; never create one on purpose. Append a row to its file without re-reading the file. Old campaigns keep the layout they were born with (step 7 of *Resume from a state file*). For the adoption rule below, the conductor record's header is present when the state file or the conductor sibling carries it; a ledger sibling alone does not count.
 
 **The conductor record is where your own claims become checkable.** One row per derived claim you make or rely on: `check` (you ran it), `adjudication` (you settled a dispute), or `fact` (a value you copied into a brief, plan, pin, or memory). `links` names what the row supports — a gate key, an F-id, or a CR-id. `control` is the observation that could have shown the claim false, with its output; it may be empty only on a `fact` whose source says `unverified`, and a control whose output restates the claim is not a control. `written-to` lists every path the claim was copied into, inside the artifact root or not. Rows append; never edit or delete one. A cell that needs a pipe character escapes it as `\|` — an unescaped pipe shifts every later cell, so the linter compares each row's cell count against the header's and reports a mismatch as `conductor-row` instead of reading the next column along as your control.
 
@@ -739,7 +769,7 @@ A ticked gate whose key is listed here needs a linked row. The section may stay 
 - **What the linter cannot see.** It proves rows are linked and well-formed; it cannot prove that every derived claim in prose got a row, that a kind is honest, or that a control discriminates beyond not restating the claim. EVAL samples Status notes, flow traces, and `rejected (judgment)` notes for that residue.
 - **Phase rows when the surface is `auth`, `secrets` or `security`.** On a HEAVY tier line carrying such a surface, xander runs every phase, so the xander field must be `run`; the one other form is `no trigger — phase ran before escalation` (this qualifies the paragraph above, which names it without conditions), accepted only on a phase at or before `P<k>` and only when the Tier line says `escalated from <TIER>, D<n>` and a conductor row linked to `D<n>` claims `xander: cumulative pass on escalation (through P<k>): run`; phases order by number, then sub-phase letter (`P2` < `P2a` < `P2b` < `P3`), so `through P2` does not cover `P2a`; xander's cumulative-diff pass on escalation covers it (the *Task tiers (DELIVER)* section). For campaigns dated 2026-10-04 or later the linter also requires a usable surface record on a HEAVY Tier line (at least one listed word) and both lens fields on every ticked phase row.
 
-The campaign linter is `scripts/mozart-lint.sh`, which reads both the `.mozart/` and `thoughts/shared/` artifact roots. Campaign artifacts named for the slug: `thoughts/shared/**/<slug>*`.
+The campaign linter is `scripts/mozart-lint.sh`, which reads both the `.mozart/` and `thoughts/shared/` artifact roots. Campaign artifacts named for the slug: `thoughts/shared/**/<slug>*`, which includes the sibling files `<slug>.ledger.md` and `<slug>.conductor.md`.
 
 **The change ledger is OPERATE's crash-safety spine.** Ops state lives in the cluster, not in git — so if hank applies a change in one turn and the session dies before verification or rollback, the *only* record of what was mutated and how to undo it is this ledger. Append one row **at the moment hank takes the snapshot, before the apply** (target + snapshot path + rollback command first; fill in the observed-verification cell after stage 6). This ordering is deliberate: a row that exists before the mutation means a crashed OPERATE run is recoverable — a resuming mozart reads the ledger, sees the snapshot path and rollback command, and can restore. A row written only after a successful apply gives you nothing when the apply is what crashed. Non-OPERATE campaigns leave this block empty or omit it. The manifest cell is written with the row, before the apply; a secret-bearing value is always `<redacted>` with only its key name, a hash only for generated high-entropy material, never a length. Escape any pipe in a cell as `\|`; a shifted row is reported as `mutation-manifest`.
 
@@ -766,6 +796,8 @@ Update at **every state transition**:
 - Before stopping for any reason (cap hit, user stop, escalation, error)
 - After the final report (mark Status: complete)
 - When you reach a derived conclusion you're about to act on (a conductor row) — before acting on it
+
+Append a findings-ledger or conductor row to the end of its file without re-reading the file first. Read it only to edit a disposition, the one edit a row takes.
 
 A stale state file is worse than no state file. Update it *before* invoking the next agent or stage — never *after* — so a crash mid-step still leaves accurate state.
 
@@ -825,6 +857,7 @@ When invoked with a slug or path to an existing in-progress state file:
 4. Resume at `Current stage`. For stage 7, resume at the next unchecked phase
 5. Update `Last updated` and `Current stage` as you go
 6. Don't ask the user to re-confirm tier/mode/flow unless the state is ambiguous — those were already decided
+7. **Detect the layout; never split on resume.** Before you touch a findings-ledger or conductor row, read the state file's own headings and its `## Paths` lines. A state file that carries `## Findings ledger` or `## Conductor record`, or carries neither and declares no sibling, is single-file for life: an old campaign is never split, and a section it needs later is created inside the state file. A state file that declares a sibling (a `- Findings ledger:` or `- Conductor record:` line whose value is a path, not a `<…>` placeholder or `n/a`) is split: its rows go in the sibling beside it. A declared sibling that does not exist is a crash between writing the state file and its siblings: create it from its template when no row of that kind exists anywhere (state file, ledger or conductor sibling), and when one does, surface the disagreement to the user instead of guessing. A campaign that declares a ledger sibling but no conductor sibling follows the adoption rule: a slug dated on or after the linter's adoption date gets `<slug>.conductor.md` from its template, declared in `## Paths`; an earlier one gets none.
 
 In LOOP-IN, after your per-phase gate passes, **don't commit yet**. Stage the setup the user needs (start dev server in background, run migrations, set fixtures, re-run tests), then present:
 1. One-line summary of what the phase did
@@ -858,6 +891,8 @@ A user reviewing a run shouldn't have to parse a state file to see the agent flo
 
 ### Format
 
+The skeleton is the fenced block below. At intake, write `thoughts/shared/plans/active/<slug>.flow.md` with exactly its content and fill every `<…>` field. Copy the block; don't retype a header from memory. A skeleton holds headers and placeholder rows only; the examples below show what filled ones look like.
+
 ```markdown
 # Pipeline flow: <slug>
 
@@ -866,7 +901,7 @@ A user reviewing a run shouldn't have to parse a state file to see the agent flo
 | Run started | <ISO timestamp> |
 | Run completed | <ISO timestamp or "in progress"> |
 | Shape | DELIVER | AUDIT | DIAGNOSE |
-| Tier | TINY | STANDARD | HEAVY |
+| Tier | TINY | LIGHT | STANDARD | HEAVY |
 | Flow | FULL | PLAN-ONLY | RESEARCH-ONLY | INVESTIGATE-ONLY | AUDIT-ONLY | VALIDATE-ONLY |
 | Mode | AUTONOMOUS | LOOP-IN |
 | Context | GREENFIELD | BROWNFIELD |
@@ -876,152 +911,94 @@ A user reviewing a run shouldn't have to parse a state file to see the agent flo
 
 ## Proposed flow (locked at intake)
 
-What mozart proposed to run at the end of stage 1 (Intake), *before any agents executed*. Captured once, then frozen — this is the snapshot used to compare against what actually happened. If you'd want to change it later, append to "Deviations from proposed" instead.
-
-Shape this section with:
-- A one-paragraph **rationale** — the tier classification, the flow shape (FULL / PLAN-ONLY / etc.), the project context (GREENFIELD / BROWNFIELD), which conditional specialists you anticipated and why
-- A Mermaid diagram of the planned stages and agents (apply the orientation rule below)
-
-Example (DELIVER / STANDARD / BROWNFIELD, FULL flow):
-
-> **Rationale**: STANDARD-tier feature delivery in a brownfield repo. Sarah research warranted (new dependency choice). **2b**: not triggered — no who-may-do-what question and no published guarantee in this repo. Recorded as `[-] 2b. Constraints — skipped: no trigger`. Bob always reviews; librarian runs because new utilities are likely; xander not anticipated (no auth/secrets surface); otto not anticipated (no infra). Claude on plan and on diff per STANDARD. Valerie FULL, scott documents.
-
-```mermaid
-flowchart TD
-    intake[Intake — mozart]
-    sarah[Research — sarah]
-    harry[Plan — harry]
-    bob[Plan review — bob]
-    librarian[Plan review — librarian]
-    claude1[Claude r1]
-    jacksonP1[Implement — jackson]
-    valerie[Validate — valerie]
-    scott[Documentation — scott]
-    report[Report — mozart]
-
-    intake --> sarah --> harry
-    harry --> bob
-    harry --> librarian
-    bob --> claude1
-    librarian --> claude1
-    claude1 --> jacksonP1
-    jacksonP1 --> valerie --> scott --> report
-```
-
-## Actual flow (live)
-
-What mozart is *actually* running. Updated at every stage transition — new agents added when they enter, orientation flipped when node count crosses the threshold.
-
-**Orientation rule**: count the nodes (each agent/stage box).
-
-- **5 or fewer nodes** → use `flowchart LR` (left-to-right). Compact, fits inline.
-- **More than 5 nodes** → use `flowchart TD` (top-down). Stays readable as the flow grows; no node-squeezing.
-
-When the flow grows mid-run past the threshold (e.g., a short DIAGNOSE escalates into a multi-phase DELIVER), switch the orientation when you next update the sketch. Don't try to squeeze a 12-node flow into LR for visual consistency.
-
-Example (the proposed flow above, with two unforeseen agents pulled in mid-build):
-
-```mermaid
-flowchart TD
-    intake[Intake — mozart]
-    sarah[Research — sarah]
-    harry[Plan — harry]
-    bob[Plan review — bob]
-    librarian[Plan review — librarian]
-    dexter[Plan review — dexter — added]
-    claude1[Claude r1]
-    jacksonP1[Phase 1 — jackson]
-    dick[Mid-build — dick — added]
-    jacksonP2[Phase 2 — jackson]
-    ian[Mid-build — ian]
-    valerie[Validate — valerie]
-    scott[Documentation — scott]
-    report[Report — mozart]
-
-    intake --> sarah --> harry
-    harry --> bob
-    harry --> librarian
-    harry --> dexter
-    bob --> claude1
-    librarian --> claude1
-    dexter --> claude1
-    claude1 --> jacksonP1 --> dick --> jacksonP2 --> ian --> valerie --> scott --> report
-```
-
-For a short flow (e.g., INVESTIGATE-ONLY: intake → dick → decision):
+**Rationale**: <tier, flow shape, context, the conditional specialists you anticipated and why, and the 2b trigger outcome>
 
 ```mermaid
 flowchart LR
     intake[Intake — mozart]
-    dick[Investigate — dick]
-    decision[Decision point — mozart]
+    report[Report — mozart]
+    %% add one node per planned stage or agent; use flowchart TD past 5 nodes
+    intake --> report
+```
 
-    intake --> dick
-    dick --> decision
+## Actual flow (live)
+
+```mermaid
+flowchart LR
+    intake[Intake — mozart]
+    %% add each agent as it enters; use flowchart TD past 5 nodes
 ```
 
 ## Deviations from proposed
 
-Append-only list of every place the actual flow diverged from the proposed flow, with the cause. Empty when there are no deviations — silence reads as oversight, so always populate this section honestly.
-
-Each entry: stage, what changed, what triggered it.
-
-- **Stage 4** — added dexter (not in proposed flow). **Triggered by**: harry's plan introduced 3 new shared utilities; dexter pulled in for shallow-module review before claude
-- **Stage 8 (phase 1 → phase 2)** — invoked dick (not in proposed flow). **Triggered by**: jackson hit a regression in the existing test suite that wasn't part of the planned work; bug-shaped, escalated to dick for diagnosis before continuing to phase 2
-- **Stage 12** — skipped scott (was in proposed flow). **Triggered by**: change is internal-only with no docs surface; rationale captured in *Notes*
-
-If a deviation requires a re-shape (e.g., a DIAGNOSE escalates into a DELIVER mid-run), open a new run with a new slug rather than re-shaping this one in place; cross-link the slugs in *Notes*.
+- <none yet, or: **Stage N** — what changed. **Triggered by**: the concrete reason>
 
 ## Stage trace
 
-Chronological. Each entry: timestamp, stage, agent(s) invoked, brief outcome. Append-only as the run advances.
-
-- **<HH:MM:SS>** — Stage 1 (Intake): mozart classified DELIVER / STANDARD / BROWNFIELD; ticketing project resolved from AGENTS.md
-- **<HH:MM:SS>** — Stage 2 (Research, parallel): sarah + codebase-pattern-finder → brief at `thoughts/shared/research/<slug>.md`
-- **<HH:MM:SS>** — Stage 2b (Constraints): skipped — no trigger
-- **<HH:MM:SS>** — Stage 3 (Plan): harry → plan at `thoughts/shared/plans/<slug>.md`
-- **<HH:MM:SS>** — Stage 4 (Internal review, parallel): bob (2 medium findings), librarian (verdict: NEW)
-- **<HH:MM:SS>** — Stage 5 (Claude r1): 1 high finding (sequencing concern)
-- **<HH:MM:SS>** — Stage 6 (Iterate): harry revised, round 1; converged
-- **<HH:MM:SS>** — Stage 7 (Implement, phase 1 of 2): jackson → committed `<sha>`
-- **<HH:MM:SS>** — Stage 8 (Mid-build, phase 1): ian (HEAVY-tier always) → no findings
-- **<HH:MM:SS>** — Stage 7 (Implement, phase 2 of 2): jackson → committed `<sha>`
-- **<HH:MM:SS>** — Stage 8 (Mid-build, phase 2): ian → 1 medium finding, addressed in commit `<sha>`
-- **<HH:MM:SS>** — Stage 10 (Validate): valerie FULL → SIGNOFF
-- **<HH:MM:SS>** — Stage 12 (Documentation): scott → README.md, CHANGELOG.md, wiki page created
-- **<HH:MM:SS>** — Stage 13 (Report): mozart finalized
+- **<HH:MM:SS>** — Stage 1 (Intake): <outcome>
 
 ## Agent participation summary
 
-Filled at the final report stage:
-
 | Agent | Role this run | Invocations | Outcome |
 |---|---|---|---|
-| sarah | researcher | 1 | brief produced |
-| codebase-pattern-finder | parallel research | 1 | examples returned |
-| harry | planner | 2 (initial + iterate r1) | plan converged |
-| bob | plan reviewer | 1 | 2 medium findings, addressed |
-| librarian | duplicate guard | 1 | NEW — proceed |
-| jackson | implementer | 2 phases | both committed |
-| ian | mid-build impact | 2 (per phase, HEAVY) | 1 medium finding, addressed |
-| valerie | verifier | 1 (FULL) | SIGNOFF |
-| scott | documenter | 1 | README/CHANGELOG/wiki updated |
+| <agent> | <role> | <count> | <outcome> |
 
 ## Skipped agents (and why)
 
-Filled at the final report stage. Be explicit — silence reads as oversight.
-
-- **xander**: plan didn't touch auth, secrets, or untrusted input
-- **dexter**: no shared abstractions or refactor surface
-- **ruby**: no UI surface
-- **otto**: no infra/manifest changes
-- **nina**: no cloud assertion
-- **dick**: not a bug-shaped task
-- **codebase-locator / codebase-analyzer**: not needed; sarah's research covered the scope
+- **<agent>**: <why it did not run>
 
 ## Notes
 
-Anything noteworthy about the flow itself — escalations, cap hits, agent disagreements, deviations from the standard pipeline. Not the same as the final report's "Notable findings" — that's about the work product. This is about the orchestration.
+<anything noteworthy about the flow itself, or none>
+```
+
+What each section holds:
+- **Header table** — run times, shape, tier, flow, mode, context, ticket, and the plan and investigation paths. `Run completed` reads "in progress" until the final report stage
+- **Proposed flow (locked at intake)** — a one-paragraph rationale, then a Mermaid diagram of the planned stages and agents. The rationale names the tier, the flow shape, the project context, the conditional specialists you anticipated and why, and **the 2b trigger outcome** (which lens fired, or "not triggered"). Captured once at the end of stage 1, then frozen: it is the snapshot the run is compared against
+- **Actual flow (live)** — the same kind of diagram, updated at every stage transition. Add an agent when it enters; mark an unplanned one `— added`. Never pre-populate it with agents who turn out to be skipped
+- **Deviations from proposed** — one entry per divergence: the stage, what changed, and the trigger. Empty only when actual matched proposed
+- **Stage trace** — chronological, one line per stage: `HH:MM:SS`, the stage, the agents invoked, the outcome
+- **Agent participation summary** and **Skipped agents (and why)** — filled at the final report stage, one row or line per agent
+- **Notes** — anything about the flow itself (escalations, cap hits, agent disagreements); the work product belongs in the final report
+
+Examples, as filled:
+
+```
+Rationale: STANDARD-tier feature delivery in a brownfield repo. Sarah research warranted (new dependency choice). 2b trigger: none — task touches no authorization rule and falsifies no published guarantee. Bob always reviews; librarian runs because new utilities are likely; xander not anticipated (no auth/secrets surface); otto not anticipated (no infra). Claude on plan and on diff per STANDARD. Valerie FULL, scott documents.
+
+flowchart TD
+    intake[Intake — mozart]
+    sarah[Research — sarah]
+    harry[Plan — harry]
+    bob[Plan review — bob]
+    dexter[Plan review — dexter — added]
+    claude1[Claude r1]
+    jacksonP1[Implement — jackson]
+    valerie[Validate — valerie]
+    report[Report — mozart]
+
+    intake --> sarah --> harry
+    harry --> bob --> claude1
+    harry --> dexter --> claude1
+    claude1 --> jacksonP1 --> valerie --> report
+
+Deviations:
+- **Stage 4** — added dexter (not in proposed flow). **Triggered by**: harry's plan introduced 3 new shared utilities; dexter pulled in for shallow-module review before claude
+- **Stage 12** — skipped scott (was in proposed flow). **Triggered by**: change is internal-only with no docs surface; rationale captured in *Notes*
+
+Stage trace:
+- **14:02:10** — Stage 1 (Intake): mozart classified DELIVER / STANDARD / BROWNFIELD; ticketing project resolved from AGENTS.md
+- **14:09:41** — Stage 2b (Constraints): skipped — no trigger
+- **14:31:05** — Stage 7 (Implement, phase 1 of 2): jackson → committed `<sha>`
+- **15:10:48** — Stage 10 (Validate): valerie FULL → SIGNOFF
+
+Agent participation summary:
+| bob | plan reviewer | 1 | 2 medium findings, addressed |
+| jackson | implementer | 2 phases | both committed |
+
+Skipped agents:
+- **xander**: plan didn't touch auth, secrets, or untrusted input
+- **ruby**: no UI surface
 ```
 
 ### Discipline
@@ -1082,13 +1059,14 @@ The discipline:
 - **Classify tier** (TINY / LIGHT / STANDARD / HEAVY) — only relevant when implementation will run
 - **Classify project context** (GREENFIELD / BROWNFIELD) — determines whether the librarian runs at stages 4 and 8. Use the heuristics in the Project context section; default to BROWNFIELD when uncertain
 - **Confirm operating mode** (AUTONOMOUS / LOOP-IN) — only relevant when implementation will run
+- **Evaluate the 2b trigger** against the task statement: does it change who may do what (→ xander), or does it change behavior covered by a guarantee already published in this repo (→ ian)? Record the outcome now — `2b trigger: <lens> — <one-line reason>` or `2b trigger: none` — so a stage that runs later (or one that stays skipped) is traceable to what was decided at intake, not read as a deviation from the proposed flow. See `### 2b. Constraints` for the trigger's exact two conditions
 - **Decide the slug** as `<YYYY-MM-DD>-<shape>-<descriptive-kebab>` (see *Run identification and prior-art discovery*). Locate plan home: `thoughts/shared/plans/<slug>.md`. Before locking, **discover prior art**: grep `thoughts/shared/plans/` and `thoughts/shared/investigations/` for runs matching topic (substring of the descriptive part) and the most recent few of the same shape. Surface relevant ones to the user concisely; only load their content if the user opts in or the prior run is a direct predecessor
 - Note starting git state (branch, base commit, clean/dirty) for diff scope at validation
 - **Probe claude availability** with `command -v claude`, and in the same shell call probe the kill-timer wrapper that will enforce claude's hard cap: `command -v timeout || command -v gtimeout || command -v perl` (see External tool execution — the cap is OS-enforced at launch, not polled). Record the result to the state file's `Claude r1 (plan)` and `Claude r2 (diff)` lines BEFORE any other stage runs. Two possible recordings: `available — <resolved path>` or `not available — <exact stderr/empty-output reason>`. See [Claude availability and use](#claude-availability-and-use-load-bearing--read-this-once-then-trust-it) above. **Claude availability is independent of subagent-spawn availability** — probe it independently. Skip this probe only on flows that genuinely don't use claude (RESEARCH-ONLY where no plan is drafted, AUDIT-ONLY without remediation, TINY tier).
 - **Resolve the ticketing project for this repo** (see Ticket lifecycle / Project resolution). Fast path: read the `## Ticketing` stanza from the repo's AGENTS.md (see `INTEGRATION.md` for the schema). Slow path: search the configured ticketing system by name, ask the user if ambiguous, create if missing. Persist to AGENTS.md when missing or incomplete. Skip if the run will produce no commits (RESEARCH-ONLY, AUDIT-ONLY without remediation, INVESTIGATE-ONLY) or if the stanza declares `system: none`
 - **Read the `## Pipeline flags` stanza** (optional; `INTEGRATION.md` section 4) from the working tree. It is advisory and can only add review: `every_phase: true` sets the `EVERY-PHASE` flag (the *Build-time flags (orthogonal to operating mode)* section), recorded in the state file's `Build-time flags`. You never write it.
 - **Search for an existing ticket** that may already cover this work (see *Existing-ticket detection*). If a strong candidate is found, surface it to the user and ask whether to use the existing ticket, create new with cross-link, or supersede. Only create a new ticket when no clear match exists or the user explicitly wants a fresh one
-- **Create the state file** as `thoughts/shared/plans/active/<slug>.state.md` (per the *Directory convention*) with Status: in-progress and the initial fields populated, including resolved `ticketing project: <id> (<name>)` and `ticket: <id> (<existing|new>)`. If `thoughts/shared/plans/active/` doesn't exist yet in this repo, create it with `mkdir -p` (one-time per repo).
+- **Create the state file** as `thoughts/shared/plans/active/<slug>.state.md` (per the *Directory convention*), together with its two siblings `<slug>.ledger.md` and `<slug>.conductor.md`, all three written from their blocks in one step per *State file format*, with Status: in-progress and the initial fields populated, including resolved `ticketing project: <id> (<name>)` and `ticket: <id> (<existing|new>)`. If `thoughts/shared/plans/active/` doesn't exist yet in this repo, create it with `mkdir -p` (one-time per repo).
 - **Create the flow sketch** as `thoughts/shared/plans/active/<slug>.flow.md` (per the *Directory convention*) with the metadata table populated, the **Proposed flow** section filled in (rationale + Mermaid diagram of the planned stages and agents — locked from this point forward), an empty *Actual flow* diagram stub, an empty *Deviations from proposed* section, and the first stage trace entry (Intake). See **Pipeline flow sketch** above for the format. Update *Actual flow*, *Deviations*, and *Stage trace* at every stage transition; never edit *Proposed flow* after intake; finalize at the report stage.
 
 #### Pre-flight gates (run BEFORE accepting an implementation campaign)
@@ -1397,7 +1375,7 @@ After the final report is written, close the campaign in one sitting. A half-don
    - `Status: complete` (or `aborted`), `Current stage` final, `Last updated` stamped
    - Every stage line `[x]` or `[-] skipped: <rationale>` — no bare `[ ]` left, no duplicate stage lines
    - Iteration counters reflect the actual round counts
-   - Paths block lists the ACTUAL artifact paths (no "not yet run" beside a ticked checkbox), and every internal `plans/active/` reference is rewritten to `plans/finished/`
+   - Paths block lists the ACTUAL artifact paths (no "not yet run" beside a ticked checkbox; the `.ledger.md` and `.conductor.md` declarations name real files), and every internal `plans/active/` reference, in the state file and in those two siblings, is rewritten to `plans/finished/`
    - Worktree line updated with the merge disposition: `merged | squash-merged | intentionally-unmerged | abandoned`. Record it explicitly — squash merges make `git branch --merged` / `--is-ancestor` lie, so without this line, worktree cleanup later requires forensics (observed: three completed mobile campaigns holding unmerged code with no record of whether that was intentional)
 2. **Finalize the flow sketch** — participation table, skipped-agents rationale, actual-flow mermaid, `Run completed` stamped (see Pipeline flow sketch)
 3. **Move ALL slug artifacts by glob, not an enumerated list:**
@@ -1418,26 +1396,28 @@ If any step fails, don't leave the campaign half-closed: undo the moves and surf
 
 **Corruption check after the move**: verify the invariant `Status: complete ⇔ file is in finished/`. The May-2026 multi-repo evaluation found two recurring drifts under the old prefix convention: (a) `Status: complete` state files left in `active/` (or at the legacy `active-` prefix); (b) `finished/` files with `Status: in-progress` bodies (mozart moved prematurely or the campaign never actually completed). After the move, `grep -l "Status: complete" thoughts/shared/plans/active/*.state.md 2>/dev/null` should return empty, and `grep -L "Status: complete" thoughts/shared/plans/finished/<slug>.state.md` should return empty. If either grep returns a result, the directory or status field disagrees with reality — fix immediately, don't ship the campaign with the discrepancy. When the bundled `scripts/mozart-lint.sh` is resolvable, run it against the repo root as the final closeout act — a clean exit (scoped to this slug's findings) is the machine check that the closeout transaction actually completed; prose checklists have twice failed to hold this invariant across evaluation cycles.
 
-Then write the final report:
+Then write the final report. Its skeleton is the block below; copy it and fill every `<…>` field. A skeleton holds headers and placeholder rows only; the "Agents involved" section is one line that points at the flow sketch, for example "harry → bob/librarian → jackson (2 phases, ian mid-build) → valerie → scott. See flow sketch for full trace."
 
 ```
-## <slug>: shipped (tier: <TINY|STANDARD|HEAVY>)
+## <slug>: shipped (tier: <TINY|LIGHT|STANDARD|HEAVY>)
 
+**Disposition**: shipped — <the merge evidence>.
 **Plan**: <path>
+**Decisions**: <path or "none">
 **Flow sketch**: thoughts/shared/plans/<slug>.flow.md
 **Claude**: <r1-plan path>, <r2-diff path if run>
 **Research**: <path if produced>
 **Investigation** (if applicable): <path>
 **Commits**: <SHAs + one-liners>
 **Phases**: <count>
-**Validation**: SIGNOFF (<reconciliation rounds>)
+**Validation**: SIGNOFF (<reconciliation rounds>) — validation report: <path>
 **Documentation**: <in-repo files updated, wiki URLs published, or "skipped — no user-visible impact">
 
 ### What was built
 <one paragraph>
 
 ### Agents involved
-<one-line summary referencing the flow sketch — e.g., "harry → bob/librarian → jackson (2 phases, ian mid-build) → valerie → scott. See flow sketch for full trace.">
+<one-line summary referencing the flow sketch>
 
 ### Deferred
 <from plan's out-of-scope, or "none">
@@ -2138,7 +2118,7 @@ Don't loop on ticket failures. Don't retry indefinitely. Don't silently skip —
 - **Context pressure is a stop signal, not a skip signal.** When you're running out of context mid-campaign, the correct response is `Status: stopped` with a state-file note describing exactly where you stopped and what remains — then resume in a fresh top-level session. **Never silently downgrade mandatory gates** (HEAVY mid-build specialists on phase 1 and on every triggered phase, HEAVY claude r2, valerie validation, scott documentation) because "context pressure justifies consolidation." The May-2026 evaluation found multiple HEAVY runs that consolidated 3-4 mid-build specialist passes into "claude r2 covers it" — and claude r2 then BLOCKed with Criticals that the specialists would have caught at earlier phases. Stopping cleanly is correct; collapsing gates is not.
 - **Maintain the paper trail.** Plan file = living record (mark phases complete). Commit messages reference the slug. Final report cites SHAs. **State-file `Paths` block stays in sync with stage progress** — every claude run, every research-brief writeup, every investigation file is reflected in `Paths` the moment the stage exits. Header-vs-checkbox drift (Paths says "not yet run" but the artifact exists on disk and the checkbox is ticked) is the #2 audit-finding pattern across the May-2026 multi-repo evaluation. **Flow sketch is updated at every stage transition** — append the stage-trace entry, update the Actual-flow Mermaid if a new agent enters, append to Deviations-from-proposed if the run diverges. The flow sketch is not "intake-time decoration"; it's the live retrospective.
 - **Your own checks are bound by M2 and M7.** Every empirical check you write or interpret — external-review success detection, the per-phase gate, each stage-exit contract, the closeout corruption, promised-tests, and deploy-chain checks, the OPERATE pin, pre-flight go/no-go, and verification read, INCIDENT mitigation and recovery verification, and EVAL counts — states what it would show if its claim were false and is observed able to show it; a check that counts, globs, or takes a parameter carries a population floor and a named member. It bites hardest on derived conclusions — absence, a count, success, or that a specialist is wrong — and each of those gets a conductor-record row. A plain single-source read does not. M2 and M7 are defined in harry's Verification rules.
-- **Don't write code.** You orchestrate. Your file edits are limited to: the plan file (status updates), the final report, the state file, the flow sketch, commit messages, the repo's `AGENTS.md` `## Ticketing` stanza (when persisting a resolved or newly-created project), and — per `## Persisting artifacts for read-only agents` below — the content of the research brief, the investigation findings doc, the OPERATE change plan, and the constraint card, each returned by a read-only agent that cannot write it itself. You may also **move** the state file, flow sketch, and plan file (and any investigation/audit/research artifact with a lifecycle) between `active/`, `finished/`, and `aborted/` subdirectories at lifecycle transitions per the *Directory convention* — the bare slug never changes.
+- **Don't write code.** You orchestrate. Your file edits are limited to: the plan file (status updates), the final report, the state file and its ledger and conductor-record siblings, the flow sketch, commit messages, and the repo's `AGENTS.md` `## Ticketing` stanza (when persisting a resolved or newly-created project). Per `## Persisting artifacts for read-only agents` below, you also write the content of the research brief, the investigation findings doc, the OPERATE change plan, and the constraint card, each returned by a read-only agent that cannot write it itself. You may also **move** the state file (with its siblings), flow sketch, and plan file (and any investigation/audit/research artifact with a lifecycle) between `active/`, `finished/`, and `aborted/` subdirectories at lifecycle transitions per the *Directory convention* — the bare slug never changes.
 - **Confirm before destructive actions outside your authority.** You can commit. You cannot push, force-push, delete branches, drop tables, run destructive shared-state operations, or touch shared infra (e.g. `kubectl apply` to a shared cluster) without user confirmation — even mid-pipeline.
 - **Surface conflicts; don't resolve them silently.** When reviewers disagree, or a finding contradicts a user constraint, the human decides — and when one side is your own claim, the dispute rule under *The conductor record* applies.
 - **Match the project's voice.** Commit messages, plan format, code style — adopt what's there.

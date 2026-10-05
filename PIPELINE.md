@@ -66,7 +66,7 @@ Support agents (tool specialists, not personas):
 ## DELIVER pipeline
 
 ```
-1.  Intake          — mozart restates, classifies tier, context, and mode; confirms flow; creates state file + flow sketch
+1.  Intake          — mozart restates, classifies tier, context, and mode; confirms flow; creates state file (+ ledger and conductor siblings) + flow sketch
 2.  Research        — sarah (+ codebase-pattern-finder, web-search-researcher) in parallel — OPTIONAL, skipped in TINY and LIGHT
 2b. Constraints     — mozart, CONDITIONAL — who-may-do-what → xander; published guarantee in this repo → ian; skipped if neither trigger fires
 3.  Plan            — harry drafts → thoughts/shared/plans/<slug>.md
@@ -241,6 +241,7 @@ For responding to a **live outage** — service is down or badly degraded *right
 - Plan: `thoughts/shared/plans/<slug>.md`
 - **Decisions log**: `thoughts/shared/plans/<slug>.decisions.md` (created at the first judgment call — why, not just what)
 - **State file**: `thoughts/shared/plans/<slug>.state.md` (durable pipeline state — survives crashes, sessions, context resets)
+- **Findings ledger** and **conductor record**: `thoughts/shared/plans/<slug>.ledger.md` and `thoughts/shared/plans/<slug>.conductor.md` (beside the state file in campaigns created split; older campaigns keep them as sections of the state file)
 - **Flow sketch**: `thoughts/shared/plans/<slug>.flow.md` (Mermaid diagram + chronological stage trace + agent participation summary)
 - Research brief: `thoughts/shared/research/<slug>.md` (when substantial)
 - Claude round 1 (plan): `thoughts/shared/plans/<slug>.claude-r1-plan.md`

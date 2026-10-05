@@ -126,6 +126,11 @@ INTEGRATION.md             ticketing / docs / code-retrieval contract
 PIPELINE.md                full stage-by-stage pipeline reference
 LEARNINGS.md               append-only cross-project field-notes protocol
 docs/CODEX_PORT.md         Claude→Codex port rationale + mapping
+
+Maintainer tooling, not part of the install (a release check run from a full checkout):
+scripts/check-edition-text.py   the edition parity checker
+tests/parity/                   its table
+tests/policy/                   the text the table pins
 ```
 
 ## Relationship to the Claude Code edition

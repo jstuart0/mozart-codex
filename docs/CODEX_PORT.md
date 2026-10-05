@@ -166,23 +166,25 @@ is harness-neutral and stays as written.
 
 POC artifact: `codex/agents/jackson.toml`.
 
+## Skeletons stay in the skill
+
+mozart-orchestration moved its state, ledger, conductor, flow and report skeletons out of the manual into `TEMPLATE-*.md` files, so the conductor reads each one only when it writes one. This port installs a single skill file, so the skeletons stay inline in `.codex/skills/mozart/SKILL.md`: three fenced blocks under *State file format* (state, ledger, conductor), one under *Pipeline flow sketch* and one under stage 13. The ledger and conductor blocks are byte-identical to the source's template files, and the parity table checks that; the state block differs from the source's only by this port's artifact paths, reviewer names and stage list (no stage 12b). The read saving the split buys in the source is not delivered here.
+
 ## Release checklist
 
-This port has no CI, so edition parity is checked by a person before a release.
-`scripts/check-edition-text.py` and `tests/parity/editions.tsv` are copies of the
-mozart-orchestration reader and table, and `tests/policy/` holds the text they pin.
-Run, from the repository root:
+This port has no CI, so edition parity is checked by a person before a release. `scripts/check-edition-text.py` and `tests/parity/editions.tsv` are copies of the mozart-orchestration reader and table, and `tests/policy/` holds the text they pin.
+
+A maintainer runs it from a full checkout of this repository, at its root; it cannot be run from an installed skill, because the install copies `.codex/agents` and `.codex/skills` only and the checker, `tests/parity/` and `tests/policy/` are not among them.
 
 ```sh
 python3 scripts/check-edition-text.py selftest
 python3 scripts/check-edition-text.py --edition codex --root . \
-  --expect-rows 100 --expect-source-rows 29 \
+  --expect-rows 100 \
+  --expect-source-rows 29 \
   --expect-ids 70350680cfa8f5496e57181b41699f65357c969a846cebf06232084101132547 \
-  --expect-table-sha256 61fd511e07ad783c066a8c531fff84ce47263941223f71977108afd9242f49df \
+  --expect-table-sha256 6471999eadcbc89f18a55133b0bc6472e017437363d62c03e2e94414089861ae \
   --expect-policy-sha256 41a2eb5e5b4f8aa7eb94d519e0885c801c49af363153a5ef874fc1f2ba7ed973 \
   --expect-reader-sha256 76fc6bb130496bb2fc43b4d2eaddf35f75895825cec38d2b28da0e1a9eeb81f7
 ```
 
-Both commands must pass. The checklist passes only after the layout rows (the
-inline state, ledger and conductor skeletons, and the lens date) have landed; until
-then the second command fails on those rows.
+Both commands must pass. The checklist passes only once every layout row has landed. After the table or the reader is re-copied from mozart-orchestration, run `python3 scripts/check-edition-text.py hashes --edition codex` and replace these six literals with its output, here and in `docs/CODEX_PORT.md` and `.github/pull_request_template.md`.

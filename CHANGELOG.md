@@ -37,8 +37,16 @@ All notable changes to mozart-codex are documented here.
   (a persona section the conductor skill never carried).
 - **Edition parity checker**: `scripts/check-edition-text.py`, `tests/parity/editions.tsv`
   and `tests/policy/` (byte copies) and the release checklist in `CONTRIBUTING.md`
-  and `docs/CODEX_PORT.md`. This change does not carry the inline state skeletons,
-  the layout prose or the lens date; the checklist passes only once they land.
+  and `docs/CODEX_PORT.md`, and `.github/pull_request_template.md` with it as a
+  checkbox. A maintainer runs it from a full checkout, at the repository root.
+- **Layout** (`SKILL.md`): the state, ledger and conductor skeletons are three
+  fenced blocks under *State file format*, the ledger and conductor blocks
+  byte-identical to the source's template files; the flow and report skeletons take
+  the four-tier lines; a new campaign is split (`<slug>.ledger.md`,
+  `<slug>.conductor.md`), and resume never splits an old one. The intake checklist
+  gains the 2b-trigger evaluation, and bob's LIGHT duty names xander's twelve terms
+  inline. `README.md`'s layout block names the checker and `tests/` as maintainer
+  tooling outside the install.
 
 ### Changed — campaign scripts and the conductor-record snippet, from mozart-orchestration's `2026-10-03-deliver-eval-efficiency-fixes`
 

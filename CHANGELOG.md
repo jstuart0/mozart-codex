@@ -4,11 +4,45 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Changed — rules from mozart-orchestration's `2026-10-03-deliver-eval-efficiency-fixes`, ported by `2026-10-04-deliver-edition-parity-ports` (phase 6)
+
+- **LIGHT tier** (`SKILL.md` *Task tiers (DELIVER)*, `PIPELINE.md`, `README.md`):
+  a small change with a known cause skips research, constraints and claude r1,
+  gets a short plan reviewed by bob alone, runs mid-build specialists on triggers
+  and always runs claude r2. A term in xander's trigger rows, a HEAVY surface,
+  an otto or nina trigger, or a dependency manifest, lockfile or CI change is
+  never LIGHT; tiers only go up, and an escalation to HEAVY has xander review the
+  cumulative diff once. The tier-choice rule "when unsure, choose HEAVY" is gone:
+  between STANDARD and HEAVY the surface decides.
+- **Disclosure: HEAVY is no longer every-phase by default.** ian and xander run
+  on phase 1 and then on their triggers or when a phase touches the recorded
+  HEAVY surface (`**Tier**: HEAVY (surface: <word>[, <word>…])`); xander is still
+  spawned on every phase when the surface includes `auth`, `secrets` or `security`,
+  and an absent or unlisted surface word counts as touching it on every phase.
+  To keep the old behaviour, ask for `EVERY-PHASE` or declare
+  `every_phase: true` in a `## Pipeline flags` stanza (`INTEGRATION.md` section 4;
+  mozart reads it and never writes it; it can only add review).
+- **Twelve-term xander trigger** at stages 4 and 8, in `SKILL.md`, `PIPELINE.md`
+  and `xander.toml`; claude r2 on LIGHT, and the stage-8 and `P<N>` conductor-row
+  records of both lenses.
+- **No-progress stop**: a last cadence bullet in the seventeen personas that carry
+  one; the conductor treats a no-progress return as information, not an attempt,
+  and counts it as one failed spawn.
+- **Traces-to grammar** (`SKILL.md`, `PIPELINE.md`, `docs/EVAL.md`, `scott.toml`,
+  `dick.toml`): the origin campaign's slug goes first, and `escape-unrecorded`
+  reports an origin whose `## Escapes` block lacks the line.
+- **`docs/EVAL.md`** gains the `state_md5` semantics for sibling files, the
+  `split-layout` and `escape-unrecorded` columns' prose and the new sampled residue.
+- **Removed**: the unreachable `## Communicate as you work` section of `SKILL.md`
+  (a persona section the conductor skill never carried).
+- **Edition parity checker**: `scripts/check-edition-text.py`, `tests/parity/editions.tsv`
+  and `tests/policy/` (byte copies) and the release checklist in `CONTRIBUTING.md`
+  and `docs/CODEX_PORT.md`. This change does not carry the inline state skeletons,
+  the layout prose or the lens date; the checklist passes only once they land.
+
 ### Changed — campaign scripts and the conductor-record snippet, from mozart-orchestration's `2026-10-03-deliver-eval-efficiency-fixes`
 
-Only the parts this port cannot run without; the persona prose of that campaign
-(the no-progress stop, the LIGHT tier, the split-layout instructions, the state
-templates, the escapes grammar) is not ported yet.
+Only the parts this port cannot run without.
 
 - **`scripts/lib-campaign.sh`** (new, byte copy) holds the sibling-file rule and
   the awk helpers lint and metrics share. Both scripts source it from beside

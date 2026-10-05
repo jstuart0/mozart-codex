@@ -267,9 +267,25 @@ Every code-reading agent carries a **"Code retrieval: prefer a code-aware index"
 
 ---
 
+## 4. Pipeline flags (stanza optional)
+
+On a HEAVY campaign, ian and xander both run on phase 1. From phase 2 each runs when its trigger matches the phase or the phase touches the surface that made the campaign HEAVY, and xander runs on every phase when that surface is `auth`, `secrets` or `security`. Mozart records every listed word that applies, and any term in xander's stage-8 row maps to `security`. **If you declare nothing, that is the behaviour.**
+
+Declare a `## Pipeline flags` stanza when you want the stricter reading, ian and xander at every phase of every HEAVY campaign in this repo:
+
+```markdown
+## Pipeline flags
+
+- every_phase: true        # default false — the EVERY-PHASE flag
+```
+
+The stanza is advisory, like ticketing, docs, code retrieval and worktrees, so it is read from the working tree; the worst a changed value does is add review. It can only add review, never remove it. **Mozart reads this stanza and never writes it.** The same flag can be set for one campaign by asking for it in the request.
+
+---
+
 ## How agents read these stanzas
 
-Mozart resolves both stanzas at intake (DELIVER stage 1, AUDIT stage 1, DIAGNOSE stage 1) and writes the resolved values into the state file:
+Mozart resolves the stanzas at intake (DELIVER stage 1, AUDIT stage 1, DIAGNOSE stage 1) and writes the resolved values into the state file:
 
 ```yaml
 ticketing:
@@ -288,6 +304,8 @@ Specialists read the state file rather than re-resolving:
 - **jackson** posts comments after each phase commit
 - **valerie** transitions the ticket to `verified` (or back to `in_progress` on FIXES REQUIRED)
 - **scott** publishes to the configured docs surfaces using the configured categories
+
+`## Pipeline flags` resolves to a flag, not a block: mozart reads `every_phase` at intake and records `Build-time flags: EVERY-PHASE` in the state file when it is true. Mozart reads the stanza and never writes it.
 
 If the state file lacks ticketing or docs config, agents skip the corresponding step gracefully and surface that to mozart.
 

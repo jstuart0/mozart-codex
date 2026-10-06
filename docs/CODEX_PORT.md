@@ -9,7 +9,7 @@ Portable, and far more cleanly than it would have been before Codex CLI grew
 native subagents. As of v0.142.0 Codex has the three primitives mozart's
 architecture rests on: custom subagent definitions, parallel fan-out, and
 spawn-depth control. The orchestration *methodology* (pipeline stages,
-TINY/STANDARD/HEAVY tiering, gates, state-file + flow-sketch artifacts) is
+TINY/LIGHT/STANDARD/HEAVY tiering, gates, state-file + flow-sketch artifacts) is
 harness-agnostic and ports unchanged. Only the spawn / continue / entry-point
 plumbing changes.
 
@@ -140,15 +140,13 @@ is harness-neutral and stays as written.
   `thoughts/shared/` so a target repo on either convention lints cleanly; the
   rest (worktree isolation, the version-resolution gate, 12b itself) is
   scoped as its own follow-up campaign.
-- **Lint deviations from upstream (disclosed, four).** `scripts/mozart-lint.sh`
-  differs from upstream's code in exactly four places: no Check I
-  (`missing-12b`), `Claude|Codex` matched and reported as `review-drift`, the
-  nothing-to-lint message wording, and the default of `MOZART_LINT_LENS_SINCE`
-  (a far-future date, `9999-12-31`, so the dated lens-record rules are dormant
-  until set). The last one is deliberate: this port's manual does not yet tell its
-  conductor to write a HEAVY surface record, so enforcing the rule would fail a
-  user for following their own manual. Revisit when the port's manual gains that
-  rule; the follow-up ports plan carries the prose.
+- **Lint deviations from upstream (disclosed, three).** `scripts/mozart-lint.sh`
+  differs from upstream's code in exactly three places: no Check I
+  (`missing-12b`), `Claude|Codex` matched and reported as `review-drift`, and the
+  nothing-to-lint message wording. The default of `MOZART_LINT_LENS_SINCE` is
+  upstream's, `2026-10-04`: this port's manual now tells its conductor to record a
+  HEAVY surface and both lenses on every phase row, so the dated lens-record rules
+  apply to campaigns slugged on or after that day.
 
 ## Work breakdown
 
@@ -165,3 +163,26 @@ is harness-neutral and stays as written.
 6. Live-validate the four risks above on a TINY DELIVER run.
 
 POC artifact: `codex/agents/jackson.toml`.
+
+## Skeletons stay in the skill
+
+mozart-orchestration moved its state, ledger, conductor, flow and report skeletons out of the manual into `TEMPLATE-*.md` files, so the conductor reads each one only when it writes one. This port installs a single skill file, so the skeletons stay inline in `.codex/skills/mozart/SKILL.md`: three fenced blocks under *State file format* (state, ledger, conductor), one under *Pipeline flow sketch* and one under stage 13. The ledger and conductor blocks are byte-identical to the source's template files, and the parity table checks that; the state block differs from the source's only by this port's artifact paths, reviewer names and stage list (no stage 12b). The read saving the split buys in the source is not delivered here.
+
+## Release checklist
+
+This port has no CI, so edition parity is checked by a person before a release. `scripts/check-edition-text.py` and `tests/parity/editions.tsv` are copies of the mozart-orchestration reader and table, and `tests/policy/` holds the text they pin.
+
+A maintainer runs it from a full checkout of this repository, at its root; it cannot be run from an installed skill, because the install copies `.codex/agents` and `.codex/skills` only and the checker, `tests/parity/` and `tests/policy/` are not among them.
+
+```sh
+python3 scripts/check-edition-text.py selftest
+python3 scripts/check-edition-text.py --edition codex --root . \
+  --expect-rows 105 \
+  --expect-source-rows 29 \
+  --expect-ids 8e17e6c20a48ea463eba20d0bb513a24f56e6f7c312c019b86de1da1305cd6a4 \
+  --expect-table-sha256 bb82ff23269667613814859557cf4a712ea67854ee70e756d0c044d511b16a18 \
+  --expect-policy-sha256 d84f21f4fade1d144cc82ab4a3bb1645edb22a31a9ca42c2751912a229f06e0f \
+  --expect-reader-sha256 76fc6bb130496bb2fc43b4d2eaddf35f75895825cec38d2b28da0e1a9eeb81f7
+```
+
+Both commands must pass. The checklist passes only once every layout row has landed. After the table or the reader is re-copied from mozart-orchestration, run `python3 scripts/check-edition-text.py hashes --edition codex` and replace these six literals with its output, here and in `docs/CODEX_PORT.md` and `.github/pull_request_template.md`.

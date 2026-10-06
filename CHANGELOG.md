@@ -4,11 +4,53 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Changed — rules from mozart-orchestration's `2026-10-03-deliver-eval-efficiency-fixes`, ported by `2026-10-04-deliver-edition-parity-ports` (phase 6)
+
+- **LIGHT tier** (`SKILL.md` *Task tiers (DELIVER)*, `PIPELINE.md`, `README.md`):
+  a small change with a known cause skips research, constraints and claude r1,
+  gets a short plan reviewed by bob alone, runs mid-build specialists on triggers
+  and always runs claude r2. A term in xander's trigger rows, a HEAVY surface,
+  an otto or nina trigger, or a dependency manifest, lockfile or CI change is
+  never LIGHT; tiers only go up, and an escalation to HEAVY has xander review the
+  cumulative diff once. The tier-choice rule "when unsure, choose HEAVY" is gone:
+  between STANDARD and HEAVY the surface decides.
+- **Disclosure: HEAVY is no longer every-phase by default.** ian and xander run
+  on phase 1 and then on their triggers or when a phase touches the recorded
+  HEAVY surface (`**Tier**: HEAVY (surface: <word>[, <word>…])`); xander is still
+  spawned on every phase when the surface includes `auth`, `secrets` or `security`,
+  and an absent or unlisted surface word counts as touching it on every phase.
+  To keep the old behaviour, ask for `EVERY-PHASE` or declare
+  `every_phase: true` in a `## Pipeline flags` stanza (`INTEGRATION.md` section 4;
+  mozart reads it and never writes it; it can only add review).
+- **Twelve-term xander trigger** at stages 4 and 8, in `SKILL.md`, `PIPELINE.md`
+  and `xander.toml`; claude r2 on LIGHT, and the stage-8 and `P<N>` conductor-row
+  records of both lenses.
+- **No-progress stop**: a last cadence bullet in the seventeen personas that carry
+  one; the conductor treats a no-progress return as information, not an attempt,
+  and counts it as one failed spawn.
+- **Traces-to grammar** (`SKILL.md`, `PIPELINE.md`, `docs/EVAL.md`, `scott.toml`,
+  `dick.toml`): the origin campaign's slug goes first, and `escape-unrecorded`
+  reports an origin whose `## Escapes` block lacks the line.
+- **`docs/EVAL.md`** gains the `state_md5` semantics for sibling files, the
+  `split-layout` and `escape-unrecorded` columns' prose and the new sampled residue.
+- **Removed**: the unreachable `## Communicate as you work` section of `SKILL.md`
+  (a persona section the conductor skill never carried).
+- **Edition parity checker**: `scripts/check-edition-text.py`, `tests/parity/editions.tsv`
+  and `tests/policy/` (byte copies) and the release checklist in `CONTRIBUTING.md`
+  and `docs/CODEX_PORT.md`, and `.github/pull_request_template.md` with it as a
+  checkbox. A maintainer runs it from a full checkout, at the repository root.
+- **Layout** (`SKILL.md`): the state, ledger and conductor skeletons are three
+  fenced blocks under *State file format*, the ledger and conductor blocks
+  byte-identical to the source's template files; the flow and report skeletons take
+  the four-tier lines; a new campaign is split (`<slug>.ledger.md`,
+  `<slug>.conductor.md`), and resume never splits an old one. The intake checklist
+  gains the 2b-trigger evaluation, and bob's LIGHT duty names xander's twelve terms
+  inline. `README.md`'s layout block names the checker and `tests/` as maintainer
+  tooling outside the install.
+
 ### Changed — campaign scripts and the conductor-record snippet, from mozart-orchestration's `2026-10-03-deliver-eval-efficiency-fixes`
 
-Only the parts this port cannot run without; the persona prose of that campaign
-(the no-progress stop, the LIGHT tier, the split-layout instructions, the state
-templates, the escapes grammar) is not ported yet.
+Only the parts this port cannot run without.
 
 - **`scripts/lib-campaign.sh`** (new, byte copy) holds the sibling-file rule and
   the awk helpers lint and metrics share. Both scripts source it from beside
@@ -22,7 +64,7 @@ templates, the escapes grammar) is not ported yet.
   `MOZART_LINT_LENS_SINCE` (default 2026-10-04), and the stricter Tier parse.
   The only code differences from upstream are still the omitted Check I, the
   `Claude|Codex` review-label match and the `review-drift` category name.
-- **Deliberate deviation (D13):** the default of `MOZART_LINT_LENS_SINCE` in this port's `mozart-lint.sh` is `9999-12-31`, so the dated HEAVY surface-record rules are dormant until set, because this port's manual does not yet tell its conductor to write one; revisit when the ports plan lands that prose.
+- **Lens date (D13 retired):** the default of `MOZART_LINT_LENS_SINCE` in this port's `mozart-lint.sh` is upstream's, `2026-10-04`, now that the manual tells the conductor to write the HEAVY surface record and both lens fields. A HEAVY campaign slugged on or after that day with no usable surface record gets `conductor-row`; earlier campaigns gain no finding. Override the date with `MOZART_LINT_LENS_SINCE=<YYYY-MM-DD>` (a later date silences the rule for a transition, an earlier one audits history). Upgrade step: a HEAVY campaign started on or after 2026-10-04 under the old manual may draw a `no usable surface record` finding until its `**Tier**:` line records a surface (`(surface: <word>[, <word>…])`) or `MOZART_LINT_LENS_SINCE` is set to a later date. The port's code now differs from upstream in three places: the omitted Check I, the `Claude|Codex` review-label match and the nothing-to-lint message.
 - **`.codex/skills/mozart/SKILL.md`**: the conductor-record snippet carries the
   `P<N>:heavy` row-required key and the Tier-line rule; the linter paragraph
   names the sixteen categories and the library.

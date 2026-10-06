@@ -28,7 +28,7 @@ When mozart briefs another agent, he carries this standard forward — he does n
 - **Project context**: GREENFIELD (skip librarian) or BROWNFIELD (librarian runs at plan review and mid-build for new shared abstractions). Default BROWNFIELD when uncertain.
 - **Multi-campaign mode**: mozart can drive 2–4 campaigns concurrently, each with its own slug, state file, plan, ticket, and (typically) git worktree.
 - **Partial flows (early exit)**: FULL (default), PLAN-ONLY, RESEARCH-ONLY, INVESTIGATE-ONLY, AUDIT-ONLY, VALIDATE-ONLY.
-- **Three DELIVER tiers**: TINY / STANDARD / HEAVY — mozart classifies at intake to right-size gates
+- **Four DELIVER tiers**: TINY / LIGHT / STANDARD / HEAVY — mozart classifies at intake to right-size gates
 
 ## Agent roster
 
@@ -66,8 +66,8 @@ Support agents (tool specialists, not personas):
 ## DELIVER pipeline
 
 ```
-1.  Intake          — mozart restates, classifies tier, context, and mode; confirms flow; creates state file + flow sketch
-2.  Research        — sarah (+ codebase-pattern-finder, web-search-researcher) in parallel — OPTIONAL, skipped in TINY
+1.  Intake          — mozart restates, classifies tier, context, and mode; confirms flow; creates state file (+ ledger and conductor siblings) + flow sketch
+2.  Research        — sarah (+ codebase-pattern-finder, web-search-researcher) in parallel — OPTIONAL, skipped in TINY and LIGHT
 2b. Constraints     — mozart, CONDITIONAL — who-may-do-what → xander; published guarantee in this repo → ian; skipped if neither trigger fires
 3.  Plan            — harry drafts → thoughts/shared/plans/<slug>.md
 4.  Internal review — bob (always) + librarian (BROWNFIELD) + xander/dexter/ruby/otto/nina/tessa/percy (conditional, parallel)
@@ -75,9 +75,9 @@ Support agents (tool specialists, not personas):
 6.  Iterate         — harry revises if needed; capped 3 rounds; short-circuit when clean
 7.  Implement       — jackson, phase by phase (parallel streams when independent)
 8.  Mid-build gate  — mozart per-phase gate + conditional specialists (librarian / ian / xander / otto / nina / ruby / dexter / tessa / percy / bob)
-                       HEAVY tier: ian + xander mandatory on every phase
+                       HEAVY tier: ian + xander on phase 1, then on triggers and the recorded HEAVY surface
                        LOOP-IN mode: setup + user signoff before commit
-9.  Claude on diff   — claude CLI external review of final diff (HEAVY mandatory; STANDARD optional; TINY skip)
+9.  Claude on diff   — claude CLI external review of final diff (HEAVY mandatory; STANDARD default-run; LIGHT run; TINY skip)
 10. Validate        — valerie FULL mode → SIGNOFF or FIXES REQUIRED
 11. Reconcile       — jackson fixes + valerie INCREMENTAL re-check; capped 3 rounds
 12. Documentation   — scott updates README/CHANGELOG, GitHub wiki, and any external wiki configured via `## Documentation surfaces` in AGENTS.md (skipped if no user-visible impact)
@@ -86,14 +86,16 @@ Support agents (tool specialists, not personas):
 
 ### Tier adjustments
 
-| Stage | TINY | STANDARD | HEAVY |
-|---|---|---|---|
-| Research (2) | skip | optional | optional |
-| Constraints (2b) | skip | conditional | conditional |
-| Plan-review fan-out (4) | skip | conditional | conditional |
-| Claude r1 on plan (5) | skip | run | run |
-| Mid-build specialists (8) | skip | conditional | ian + xander mandatory; others conditional |
-| Claude r2 on diff (9) | skip | optional | mandatory |
+| Stage | TINY | LIGHT | STANDARD | HEAVY |
+|---|---|---|---|---|
+| Research (2) | skip | skip | optional | optional |
+| Constraints (2b) | skip | skip | conditional | conditional |
+| Plan-review fan-out (4) | skip | bob only | conditional | conditional |
+| Claude r1 on plan (5) | skip | skip | run | run |
+| Mid-build specialists (8) | skip | conditional | conditional | ian + xander on phase 1, then triggered or on the HEAVY surface; others conditional |
+| Claude r2 on diff (9) | skip | run | default-run | mandatory |
+
+On LIGHT, plan review is bob alone (tessa too when TDD is set), and bob flags any trigger term he sees in a LIGHT plan. A tripped stage-2b, xander, otto or nina trigger means the campaign is STANDARD, not LIGHT; a HEAVY surface means STANDARD at minimum, and HEAVY when the work is on that surface. `EVERY-PHASE` (see the *Build-time flags (orthogonal to operating mode)* section) spawns ian and xander at every phase of a HEAVY campaign.
 
 ### Reviewer triggers (stage 4 — internal review of the plan)
 
@@ -101,7 +103,7 @@ Support agents (tool specialists, not personas):
 |---|---|
 | bob | always |
 | librarian | BROWNFIELD AND plan introduces new functions, classes, modules, services, or shared abstractions. Skip on GREENFIELD or pure-modification plans |
-| xander | auth, secrets, untrusted input, encryption, sessions, RBAC, security headers, CSP; dependency manifest/lockfile changes (dependency vetting); CI/CD workflow changes |
+| xander | auth, secrets, untrusted input, encryption, sessions, RBAC, security headers, CSP, authorization (ownership and tenant filters), outbound requests; dependency manifest/lockfile changes (dependency vetting); CI/CD workflow changes |
 | tessa | non-trivial logic (parsers, state machines, validators, business rules, API handlers); new/modified integration boundaries; mandatory in TDD flow (authors the test contract) |
 | percy | DB schema/query shapes, caching, pagination of unbounded collections, hot-path endpoints, bundle-affecting frontend changes, stated performance goals — reviews the plan's performance budgets |
 | dexter | refactors, shared utilities, new abstractions, code-health debt |
@@ -113,9 +115,9 @@ Support agents (tool specialists, not personas):
 
 | Specialist | Trigger |
 |---|---|
-| ian | public API, exported symbol, function signature, schema, shared utility, behavior contract |
+| ian | public API, exported symbol, function signature, schema, shared utility, behavior contract; on HEAVY, also a phase that touches the recorded HEAVY surface |
 | librarian | BROWNFIELD AND phase introduces a new shared abstraction, utility module, or code in well-trafficked paths (`utils/`, `lib/`, `shared/`, `helpers/`, `common/`, `core/`). Catches duplication that slipped past plan review. Skip on GREENFIELD |
-| xander | auth, secrets, untrusted input; dependency manifest/lockfile diffs; CI/CD workflow changes. **HEAVY: always** |
+| xander | auth, secrets, untrusted input, encryption, sessions, RBAC, security headers, CSP, authorization (ownership and tenant filters), outbound requests; dependency manifest/lockfile diffs; CI/CD workflow changes; on HEAVY, also a phase that touches the recorded HEAVY surface (every phase when the surface is auth, secrets or security); once on escalation, over the cumulative diff since the base, uncommitted phase diff included |
 | tessa | test files modified; new logic or integration boundary with no test diff; mandatory in TDD flow |
 | percy | queries in loops / new query shapes (runs EXPLAIN), bundle-affecting frontend deps (measures delta), new caches, pagination of growing collections, budgeted endpoints |
 | otto | k8s manifests, Helm, infra YAML |
@@ -162,7 +164,7 @@ For investigating a specific failure (bug, regression, test failure, performance
                      stage 2 (Research) is typically skipped — dick's investigation covers it
 ```
 
-Bug-shaped DELIVER requests ("fix this bug," "X is broken") on STANDARD/HEAVY tier auto-promote to DIAGNOSE first by default. The user can override with "I know what's wrong, just fix it."
+Bug-shaped DELIVER requests ("fix this bug," "X is broken") on STANDARD/HEAVY tier auto-promote to DIAGNOSE first by default; on LIGHT they do not, because an unknown-cause bug is not LIGHT. The user can override with "I know what's wrong, just fix it."
 
 **Diagnose-mode rules:**
 - No reproducible failure → don't fake it. Dick documents that explicitly; recommends instrumentation as a next step.
@@ -218,6 +220,7 @@ For responding to a **live outage** — service is down or badly degraded *right
 4. Durable fix    — route to DELIVER (code) or OPERATE (config/infra), full gates, repro-test-first
 5. Verify recovery— service-level empirical: error rate / latency / SLO back to baseline (not "pod Running"). IC calls all-clear
 6. Post-mortem    — scott: blameless timeline + root cause + action items → follow-up campaigns; Traces-to if it traces to a shipped campaign
+                    A `Traces-to:` line puts the origin campaign's slug first (`Traces-to: <origin-slug>, <phase/sha>`). Anything else first, such as `none`, `n/a`, a ticket id, or `external — <where or why>; <slug>` for an origin with no state file in this repo, names no campaign. The origin's `## Escapes` block must carry a `Traces-to:` line naming the slug of the investigation or post-mortem (its file name up to the first dot), or `mozart-lint.sh` reports `escape-unrecorded`. Keep a campaign that is named but is not the origin out of the label position: put its slug in prose after a non-slug token.
                      └─ MITIGATE-ONLY: stop after stage 3 + 5; durable fix is a tracked follow-up
 ```
 
@@ -238,6 +241,7 @@ For responding to a **live outage** — service is down or badly degraded *right
 - Plan: `thoughts/shared/plans/<slug>.md`
 - **Decisions log**: `thoughts/shared/plans/<slug>.decisions.md` (created at the first judgment call — why, not just what)
 - **State file**: `thoughts/shared/plans/<slug>.state.md` (durable pipeline state — survives crashes, sessions, context resets)
+- **Findings ledger** and **conductor record**: `thoughts/shared/plans/<slug>.ledger.md` and `thoughts/shared/plans/<slug>.conductor.md` (beside the state file in campaigns created split; older campaigns keep them as sections of the state file)
 - **Flow sketch**: `thoughts/shared/plans/<slug>.flow.md` (Mermaid diagram + chronological stage trace + agent participation summary)
 - Research brief: `thoughts/shared/research/<slug>.md` (when substantial)
 - Claude round 1 (plan): `thoughts/shared/plans/<slug>.claude-r1-plan.md`
@@ -367,7 +371,8 @@ Output lands in `thoughts/shared/plans/` alongside the plan and state files.
 | Tier | Claude r1 (plan) | Claude r2 (diff) |
 |---|---|---|
 | TINY | skip | skip |
-| STANDARD | run | optional |
+| LIGHT | skip | run |
+| STANDARD | run | default-run |
 | HEAVY | run | mandatory |
 
 ### What if claude isn't installed

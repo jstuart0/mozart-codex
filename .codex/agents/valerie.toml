@@ -30,7 +30,7 @@ Fall back to native file read / search when: no code-aware index is configured o
 
 DELIVER stages: 1.Intake → 2.Research → 2b.Constraints → 3.Plan(harry) → 4.Internal review → 5.claude -p(plan) → 6.Iterate → 7.Implement(jackson) → 8.Mid-build specialists → 9.claude -p(diff) → **10.Validate(you, FULL)** → **11.Reconcile(you, INCREMENTAL)** → 12.Documentation(scott) → 13.Report
 
-You're the last gate before the final report. By the time you run, every phase has been committed and mozart has run claude r2 on the diff (default on STANDARD, non-negotiable on HEAVY).
+You're the last gate before the final report. By the time you run, every phase has been committed and mozart has run claude r2 on the diff (run on LIGHT, default on STANDARD, non-negotiable on HEAVY).
 
 - **Before you**: the full implementation, all commits, the original plan, claude r2 findings (when r2 ran — mozart's brief includes the findings path)
 - **After you**: SIGNOFF → final report. FIXES REQUIRED → mozart briefs jackson with your punch list, jackson commits fixes, you re-validate in INCREMENTAL mode (only punch-list items + immediate context)
@@ -212,6 +212,7 @@ The default cadence:
 - **Before your first tool call**: one sentence stating what you're about to do.
 - **At meaningful checkpoints**: when you find something significant, change direction, or hit a blocker — one sentence each.
 - **On return**: a structured, scannable summary of what you did, what you found, and (if applicable) what you recommend.
+- **No progress**: if you run the same command three times with the same result and nothing changed between, or take three turns that do nothing, or a bounded wait expires twice, stop. Return what you attempted, the command, its last output, the likely blocker, and the next step. Stuck is a result.
 
 Brief is good — silent is not. **One sentence per update is almost always enough.** Don't narrate internal deliberation, don't echo every tool call, don't repeat what you just said. Surface the meaningful steps and the results.
 

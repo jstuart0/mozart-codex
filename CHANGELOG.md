@@ -4,6 +4,15 @@ All notable changes to mozart-codex are documented here.
 
 ## [Unreleased]
 
+### Changed — a CRITICAL tier and a ceiling for every tier, ported from mozart-orchestration `09dc190..ae82c81` by `2026-10-11-deliver-critical-tier-ports`
+
+- **Five tiers.** DELIVER and OPERATE gain **CRITICAL** (`SKILL.md` *Task tiers (DELIVER)* and *Tiers (OPERATE)*, `PIPELINE.md`, `README.md`), chosen by recovery cost rather than by surface. It inherits every rule that names HEAVY and adds a rehearsal on a restored copy of the real data, one rollback drill, the probe again before each irreversible step and a written go/no-go checklist. Only the user lowers a tier, between HEAVY and CRITICAL.
+- **A ceiling for every tier** (`SKILL.md` *Tier ceilings and the real-environment probe*): full review rounds are none for TINY, one for LIGHT, STANDARD and HEAVY and two for CRITICAL; every later round is a delta check. Each tier has a plan-to-go budget; an overrun prompts the stop message and never fails the campaign.
+- **Convergence breaker and stop message.** A revision that grew the plan by more than half stops the loop before its round launches; from round 3, a round whose distinct Critical count is no lower than two rounds earlier stops it too. A cap hit, a budget overrun or a breaker stop leads with one recommendation. An instruction that names no extension is not one.
+- **Disclosure: the restore proof.** On the user's go, the restore proof (OPERATE HEAVY and CRITICAL, and a DELIVER CRITICAL deploy phase) creates a temporary scratch copy inside the user's own environment, never anywhere else, and deletes it. The target is shown and confirmed first, an aliased or shared target is refused, the copy is private with an expiry of at most 24 hours, and only timings and sizes are recorded. The real-environment probe is read-only. Neither is automatic promotion: a slow, failed or declined restore is recorded as `restore unproven` and the user decides. This port ships no PRIVACY.md; this entry and the `README.md` sentence are the disclosure.
+- **`heavy_is_critical: true`** in the `## Pipeline flags` stanza (`INTEGRATION.md` section 4) raises HEAVY-surface work to CRITICAL. It is raise-only and never authorizes a restore, a credential use or any production action.
+- **Parse and lint.** `scripts/lib-campaign.sh` is byte-identical to the source's. `tier_of` reads CRITICAL; a HEAVY line that names CRITICAL reads as CRITICAL; the three HEAVY lint checks in `scripts/mozart-lint.sh` bind CRITICAL and name the tier, and an OPERATE CRITICAL campaign's stage-4 row must record `rehearsal:` and `rollback drill:`. The OPERATE boundary-test carve in the source's `OPERATE.md` is not ported; this port keeps its boundary paragraph.
+
 ### Changed — rules from mozart-orchestration's `2026-10-03-deliver-eval-efficiency-fixes`, ported by `2026-10-04-deliver-edition-parity-ports` (phase 6)
 
 - **LIGHT tier** (`SKILL.md` *Task tiers (DELIVER)*, `PIPELINE.md`, `README.md`):

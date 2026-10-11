@@ -9,7 +9,7 @@ Portable, and far more cleanly than it would have been before Codex CLI grew
 native subagents. As of v0.142.0 Codex has the three primitives mozart's
 architecture rests on: custom subagent definitions, parallel fan-out, and
 spawn-depth control. The orchestration *methodology* (pipeline stages,
-TINY/LIGHT/STANDARD/HEAVY tiering, gates, state-file + flow-sketch artifacts) is
+TINY/LIGHT/STANDARD/HEAVY/CRITICAL tiering, gates, state-file + flow-sketch artifacts) is
 harness-agnostic and ports unchanged. Only the spawn / continue / entry-point
 plumbing changes.
 

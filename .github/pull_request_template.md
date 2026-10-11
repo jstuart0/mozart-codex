@@ -7,10 +7,10 @@ A maintainer runs it from a full checkout of this repository, at its root; it ca
 ```sh
 python3 scripts/check-edition-text.py selftest
 python3 scripts/check-edition-text.py --edition codex --root . \
-  --expect-rows 105 \
+  --expect-rows 124 \
   --expect-source-rows 29 \
-  --expect-ids 8e17e6c20a48ea463eba20d0bb513a24f56e6f7c312c019b86de1da1305cd6a4 \
-  --expect-table-sha256 bb82ff23269667613814859557cf4a712ea67854ee70e756d0c044d511b16a18 \
-  --expect-policy-sha256 d84f21f4fade1d144cc82ab4a3bb1645edb22a31a9ca42c2751912a229f06e0f \
+  --expect-ids 1a34b64c5f7018a18286e5b80def8afa7bebdf07e0ab4c61191a0b06a00df062 \
+  --expect-table-sha256 851336ba715010ad90eae55c4679d883825a676e169d8bb4fad4696379688663 \
+  --expect-policy-sha256 e43620dde3e5c381f703ed9f07a9eda9540108bdb931c1526e79e47f190c65eb \
   --expect-reader-sha256 76fc6bb130496bb2fc43b4d2eaddf35f75895825cec38d2b28da0e1a9eeb81f7
 ```

@@ -23,12 +23,16 @@ Mozart orchestrates work across six shapes:
 - **OPERATE** — change or debug a live system: intake+context pin → recon → change plan → pre-flight (dry-run+snapshot) → apply → verify observed → record rollback. Installs, config changes, and infra mutations applied straight to the running cluster/host rather than through a git pipeline; verified empirically, reversed by a recorded rollback (not `git revert`)
 - **EVAL** — evaluate mozart's own field performance from past campaign artifacts and improve the configuration (see the `mozart-eval` skill and `docs/EVAL.md`)
 
-At intake it **tiers** the task (TINY / LIGHT / STANDARD / HEAVY; SEV1/2/3 for incidents) to right-size the gates,
+At intake it **tiers** the task (TINY / LIGHT / STANDARD / HEAVY / CRITICAL; SEV1/2/3 for incidents) to right-size the gates,
 classifies the project (GREENFIELD / BROWNFIELD), and recognizes when a request
 is genuinely a single agent's job — routing it directly instead of imposing the
 full pipeline.
 
 **LIGHT** is for a small change with a known cause: skip research, constraints and claude r1; a short plan reviewed by bob alone; mid-build specialists on triggers; claude r2 runs. A security-relevant change, one on a HEAVY surface, an otto or nina trigger, or a dependency manifest, lockfile or CI change is never LIGHT, and a tier only ever goes up. On **HEAVY**, ian and xander both run on phase 1, then on their triggers or when a phase touches the recorded HEAVY surface; xander is spawned on every phase when that surface includes auth, secrets or security. Before this change HEAVY ran both on every phase: to get that behaviour back, ask for `EVERY-PHASE` or declare `every_phase: true` in a `## Pipeline flags` stanza (see `INTEGRATION.md`).
+
+**Pipeline flags** — `every_phase: true` (the `EVERY-PHASE` flag) spawns ian and xander at every phase of a HEAVY campaign; `heavy_is_critical: true` raises HEAVY-surface work to CRITICAL.
+
+**CRITICAL** is HEAVY work whose revert and redeploy do not restore the prior state cheaply (an irreversible migration, money movement, auth for many users, shared infrastructure, customer data): HEAVY plus a rehearsal on a restored copy of the real data, one rollback drill, a read-only probe of the real environment and a written go/no-go checklist, and the ship that starts it waits for your go. Every tier also has a review ceiling: one full plan-review round (two on CRITICAL), then delta checks, and a stop with a recommendation when a plan grows by more than half or its Critical count stops falling. On your go, the restore proof creates a temporary scratch copy inside your own environment, never anywhere else, and deletes it.
 
 ## The orchestra
 

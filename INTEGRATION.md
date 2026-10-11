@@ -277,9 +277,12 @@ Declare a `## Pipeline flags` stanza when you want the stricter reading, ian and
 ## Pipeline flags
 
 - every_phase: true        # default false — the EVERY-PHASE flag
+- heavy_is_critical: true   # default false — raise HEAVY-surface work to CRITICAL
 ```
 
-The stanza is advisory, like ticketing, docs, code retrieval and worktrees, so it is read from the working tree; the worst a changed value does is add review. It can only add review, never remove it. **Mozart reads this stanza and never writes it.** The same flag can be set for one campaign by asking for it in the request.
+`heavy_is_critical: true` raises work that is HEAVY by its surface to CRITICAL; only the user lowers a tier (the *Tier ceilings and the real-environment probe* section of `SKILL.md`).
+
+The stanza is advisory, like ticketing, docs, code retrieval and worktrees, and is read from the working tree. A changed value can only add review steps; it can never lower a tier, and it never authorizes a restore, a credential use or any production action — those need the user's instruction in the session. **Mozart reads this stanza and never writes it.** The same flag can be set for one campaign by asking for it in the request.
 
 ---
 
@@ -305,7 +308,7 @@ Specialists read the state file rather than re-resolving:
 - **valerie** transitions the ticket to `verified` (or back to `in_progress` on FIXES REQUIRED)
 - **scott** publishes to the configured docs surfaces using the configured categories
 
-`## Pipeline flags` resolves to a flag, not a block: mozart reads `every_phase` at intake and records `Build-time flags: EVERY-PHASE` in the state file when it is true. Mozart reads the stanza and never writes it.
+`## Pipeline flags` resolves to a flag, not a block: mozart reads `every_phase` and `heavy_is_critical` at intake, records `Build-time flags: EVERY-PHASE` in the state file when the first is true, and raises HEAVY-surface work to CRITICAL when the second is. Mozart reads the stanza and never writes it.
 
 If the state file lacks ticketing or docs config, agents skip the corresponding step gracefully and surface that to mozart.
 

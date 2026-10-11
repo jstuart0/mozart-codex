@@ -28,7 +28,7 @@ When mozart briefs another agent, he carries this standard forward — he does n
 - **Project context**: GREENFIELD (skip librarian) or BROWNFIELD (librarian runs at plan review and mid-build for new shared abstractions). Default BROWNFIELD when uncertain.
 - **Multi-campaign mode**: mozart can drive 2–4 campaigns concurrently, each with its own slug, state file, plan, ticket, and (typically) git worktree.
 - **Partial flows (early exit)**: FULL (default), PLAN-ONLY, RESEARCH-ONLY, INVESTIGATE-ONLY, AUDIT-ONLY, VALIDATE-ONLY.
-- **Four DELIVER tiers**: TINY / LIGHT / STANDARD / HEAVY — mozart classifies at intake to right-size gates
+- **Five DELIVER tiers**: TINY / LIGHT / STANDARD / HEAVY / CRITICAL — mozart classifies at intake to right-size gates
 
 ## Agent roster
 
@@ -77,7 +77,7 @@ Support agents (tool specialists, not personas):
 8.  Mid-build gate  — mozart per-phase gate + conditional specialists (librarian / ian / xander / otto / nina / ruby / dexter / tessa / percy / bob)
                        HEAVY tier: ian + xander on phase 1, then on triggers and the recorded HEAVY surface
                        LOOP-IN mode: setup + user signoff before commit
-9.  Claude on diff   — claude CLI external review of final diff (HEAVY mandatory; STANDARD default-run; LIGHT run; TINY skip)
+9.  Claude on diff   — claude CLI external review of final diff (HEAVY and CRITICAL mandatory; STANDARD default-run; LIGHT run; TINY skip)
 10. Validate        — valerie FULL mode → SIGNOFF or FIXES REQUIRED
 11. Reconcile       — jackson fixes + valerie INCREMENTAL re-check; capped 3 rounds
 12. Documentation   — scott updates README/CHANGELOG, GitHub wiki, and any external wiki configured via `## Documentation surfaces` in AGENTS.md (skipped if no user-visible impact)
@@ -86,16 +86,18 @@ Support agents (tool specialists, not personas):
 
 ### Tier adjustments
 
-| Stage | TINY | LIGHT | STANDARD | HEAVY |
-|---|---|---|---|---|
-| Research (2) | skip | skip | optional | optional |
-| Constraints (2b) | skip | skip | conditional | conditional |
-| Plan-review fan-out (4) | skip | bob only | conditional | conditional |
-| Claude r1 on plan (5) | skip | skip | run | run |
-| Mid-build specialists (8) | skip | conditional | conditional | ian + xander on phase 1, then triggered or on the HEAVY surface; others conditional |
-| Claude r2 on diff (9) | skip | run | default-run | mandatory |
+| Stage | TINY | LIGHT | STANDARD | HEAVY | CRITICAL |
+|---|---|---|---|---|---|
+| Research (2) | skip | skip | optional | optional | optional |
+| Constraints (2b) | skip | skip | conditional | conditional | conditional |
+| Plan-review fan-out (4) | skip | bob only | conditional | conditional | conditional |
+| Claude r1 on plan (5) | skip | skip | run | run | run |
+| Mid-build specialists (8) | skip | conditional | conditional | ian + xander on phase 1, then triggered or on the HEAVY surface; others conditional | as HEAVY |
+| Claude r2 on diff (9) | skip | run | default-run | mandatory | mandatory |
 
 On LIGHT, plan review is bob alone (tessa too when TDD is set), and bob flags any trigger term he sees in a LIGHT plan. A tripped stage-2b, xander, otto or nina trigger means the campaign is STANDARD, not LIGHT; a HEAVY surface means STANDARD at minimum, and HEAVY when the work is on that surface. `EVERY-PHASE` (see the *Build-time flags (orthogonal to operating mode)* section) spawns ian and xander at every phase of a HEAVY campaign.
+
+CRITICAL runs every HEAVY cell; the probe, rehearsal, checklist and each tier's ceiling are in the manual (the *Tier ceilings and the real-environment probe* section).
 
 ### Reviewer triggers (stage 4 — internal review of the plan)
 
@@ -193,8 +195,8 @@ For changing or debugging a **live system** directly — installs, config change
                   └─ OPERATE-PLAN-ONLY: stop after stage 3; otto's change plan is the deliverable
 ```
 
-**Modes:** install / config-change / infra-debug / migration (migration is always HEAVY).
-**Tiers:** TINY (single reversible change — full loop, but skip otto's separate plan + xander/claude gate) / STANDARD (default) / HEAVY (storage, access control at any layer — Kubernetes RBAC, cloud IAM, identity federation, org structure — secrets, live DB schema, production-stateful, resource-recreation — full pre-flight gate + user sign-off on irreversible steps).
+**Modes:** install / config-change / infra-debug / migration (migration is HEAVY at minimum).
+**Tiers:** TINY (single reversible change — full loop, but skip otto's separate plan + xander/claude gate) / STANDARD (default) / HEAVY (storage, access control at any layer — Kubernetes RBAC, cloud IAM, identity federation, org structure — secrets, live DB schema, production-stateful, resource-recreation — full pre-flight gate + user sign-off on irreversible steps) / CRITICAL (HEAVY whose restore is slow, partial or unprovable, or shared infrastructure, or customer data — rehearsal and rollback drill under the restore-proof guardrails in the *Tier ceilings and the real-environment probe* section, probe before each irreversible step, written go/no-go checklist).
 
 **Operate-mode rules:**
 - Never mutate without a snapshot and a recorded rollback command — TINY is no exception.
@@ -344,7 +346,7 @@ See `mozart.md` *Multi-campaign mode* for the full playbook.
 | Per-phase implementation attempts (stage 7) | 3 attempts |
 | Reconciliation rounds (stage 11) | 3 rounds |
 
-When a cap hits: mozart stops and asks the user.
+When a cap hits: mozart stops and asks the user. Below a cap, the tier ceiling and the convergence breaker can stop the loop earlier; neither lowers a cap.
 
 ## Claude CLI integration
 
@@ -374,6 +376,7 @@ Output lands in `thoughts/shared/plans/` alongside the plan and state files.
 | LIGHT | skip | run |
 | STANDARD | run | default-run |
 | HEAVY | run | mandatory |
+| CRITICAL | run | mandatory |
 
 ### What if claude isn't installed
 
